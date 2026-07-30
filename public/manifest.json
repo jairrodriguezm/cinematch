@@ -1,0 +1,18 @@
+{
+  "name": "Movie Match",
+  "short_name": "MovieMatch",
+  "description": "Desliza y empareja películas con tu pareja o amigos al estilo iOS.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07070a",
+  "theme_color": "#07070a",
+  "categories": ["entertainment"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
