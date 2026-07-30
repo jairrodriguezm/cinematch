@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import GlassCard from './GlassCard'
+import ContentCard from './ContentCard'
 import { TMDBMovie } from '@/lib/tmdb'
 import { saveMovieInteraction } from '@/app/actions/movieActions'
 import { Heart, X, HelpCircle, Star, Calendar, RefreshCw } from 'lucide-react'
@@ -134,7 +134,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="absolute w-full h-full max-w-[340px]"
             >
-              <GlassCard className="w-full h-full p-4 flex flex-col justify-between border-white/20 select-none shadow-2xl relative overflow-hidden bg-white/[0.08]">
+              <ContentCard className="w-full h-full p-4 flex flex-col justify-between select-none relative overflow-hidden">
                 {/* Movie Poster Backdrop Glow */}
                 <div 
                   className="absolute inset-0 -z-10 opacity-[0.12] blur-3xl scale-125"
@@ -179,7 +179,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
                     {activeMovie.overview || 'Sin descripción disponible.'}
                   </p>
                 </div>
-              </GlassCard>
+              </ContentCard>
             </motion.div>
           ) : (
             <motion.div
@@ -187,7 +187,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
               animate={{ scale: 1, opacity: 1 }}
               className="text-center p-6 flex flex-col items-center justify-center w-full max-w-[320px]"
             >
-              <GlassCard className="p-8 border-white/15 bg-white/5 flex flex-col items-center gap-6 shadow-2xl">
+              <ContentCard className="p-8 flex flex-col items-center gap-6">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 to-amber-300 flex items-center justify-center shadow-lg animate-float">
                   <Star className="w-8 h-8 text-slate-900 fill-current" />
                 </div>
@@ -204,7 +204,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
                   <RefreshCw className="w-3.5 h-3.5" />
                   Volver a Empezar
                 </button>
-              </GlassCard>
+              </ContentCard>
             </motion.div>
           )}
         </AnimatePresence>

@@ -39,6 +39,7 @@ export interface Database {
           name: string;
           invited_email: string;
           invited_user_id: string | null;
+          invite_token: string;
           created_at: string;
           created_by: string | null;
         };
@@ -47,6 +48,7 @@ export interface Database {
           name: string;
           invited_email: string;
           invited_user_id?: string | null;
+          invite_token?: string;
           created_at?: string;
           created_by?: string | null;
         };
@@ -55,6 +57,7 @@ export interface Database {
           name?: string;
           invited_email?: string;
           invited_user_id?: string | null;
+          invite_token?: string;
           created_at?: string;
           created_by?: string | null;
         };
@@ -117,4 +120,3 @@ export interface Database {
     };
   };
 }
-

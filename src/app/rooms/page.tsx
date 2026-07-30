@@ -13,19 +13,14 @@ export default async function RoomsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const cookieStore = await cookies();
   
-  let guestId = cookieStore.get('cinematch_user_id')?.value;
-  let guestEmail = cookieStore.get('cinematch_guest_email')?.value || 'invitado@cinematch.com';
-
-  if (!guestId) {
-    guestId = crypto.randomUUID();
-    cookieStore.set('cinematch_user_id', guestId, { maxAge: 60 * 60 * 24 * 365, path: '/' });
-  }
+  const guestId = cookieStore.get('cinematch_user_id')?.value || crypto.randomUUID();
+  const guestEmail = cookieStore.get('cinematch_guest_email')?.value || 'invitado@cinematch.com';
 
   const currentUserId = user?.id || guestId;
   const currentUserEmail = user?.email || guestEmail;
 
   // Fetch initial room structures with movie matches
-  const initialRooms = await fetchRoomsWithMatches();
+  const initialRooms = await fetchRoomsWithMatches(currentUserId, currentUserEmail);
 
   return (
     <RoomsDashboard 

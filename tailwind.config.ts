@@ -8,20 +8,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
-        glass: {
-          white: "rgba(255, 255, 255, 0.1)",
-          border: "rgba(255, 255, 255, 0.2)",
-          bgDark: "rgba(15, 23, 42, 0.3)",
-          borderDark: "rgba(255, 255, 255, 0.08)",
-        }
+        accent: '#7C3AED',
       },
       boxShadow: {
-        glass: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
-        glassHover: "0 12px 40px 0 rgba(31, 38, 135, 0.25)",
-      },
-      backdropBlur: {
-        glass: "12px",
+        card: '0 12px 32px rgba(15, 23, 42, 0.06)',
+        cardHover: '0 18px 40px rgba(15, 23, 42, 0.09)',
       }
     },
   },

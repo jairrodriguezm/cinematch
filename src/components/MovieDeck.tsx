@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence } from 'framer-motion'
 import { Heart, X, Bookmark, Star, ChevronUp, ChevronDown, Calendar, RotateCcw, Users } from 'lucide-react'
-import GlassCard from './GlassCard'
+import ContentCard from './ContentCard'
 import { TMDBMovie } from '@/lib/tmdb'
 import { saveMovieInteraction } from '@/app/actions/movieActions'
 import { cn } from '@/lib/utils'
@@ -158,26 +158,26 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
     <div className="flex-1 flex flex-col justify-between p-6 h-full select-none">
       {/* iOS App Navigation Header */}
       <div className="flex flex-col gap-1 items-center justify-center text-center mt-2 mb-3">
-        <h1 className="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-orange-400 to-amber-300 drop-shadow-md">
+        <h1 className="text-2xl font-black tracking-[0.18em] text-[#1A1A1A]">
           CINEMATCH
         </h1>
         
         {roomId && (
-          <p className="text-[9px] text-orange-400 font-black tracking-widest uppercase bg-orange-400/10 border border-orange-500/20 px-2.5 py-0.5 rounded-md">
+          <p className="text-[9px] text-[#7C3AED] font-black tracking-widest uppercase bg-violet-50 border border-violet-100 px-2.5 py-0.5 rounded-md">
             Modo de Sala Activo 👥
           </p>
         )}
 
         <div className="flex gap-2 items-center mt-1">
-          <div className="flex gap-1.5 items-center bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-semibold text-slate-300 tracking-wide uppercase">
+          <div className="flex gap-1.5 items-center bg-[#FAFAFA] border border-[#F3F4F6] px-3 py-1 rounded-full text-[10px] font-semibold text-neutral-500 tracking-wide uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             {isFallback ? 'Demostración' : 'En Directo'}
           </div>
           <Link 
             href="/rooms" 
-            className="flex gap-1 items-center bg-white/10 hover:bg-white/15 border border-white/10 px-3 py-1.5 rounded-full text-[10px] font-black text-slate-300 tracking-wide uppercase cursor-pointer transition-all active:scale-95"
+            className="flex gap-1 items-center bg-white hover:bg-violet-50 border border-[#E5E7EB] px-3 py-1.5 rounded-full text-[10px] font-black text-[#1A1A1A] tracking-wide uppercase cursor-pointer transition-all active:scale-95"
           >
-            <Users className="w-3 h-3 text-slate-400" />
+            <Users className="w-3 h-3 text-[#7C3AED]" />
             Salas
           </Link>
         </div>
@@ -197,17 +197,12 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
               style={{ x, y, rotate, opacity }}
               className="absolute w-full max-w-[330px] aspect-[9/14] cursor-grab active:cursor-grabbing z-10 touch-none"
             >
-              <GlassCard className="w-full h-full p-3 flex flex-col justify-between border-white/20 shadow-2xl relative overflow-hidden bg-white/[0.06] rounded-[32px]">
-                {/* Visual Glow Backdrop */}
-                <div 
-                  className="absolute inset-0 -z-10 opacity-[0.15] blur-3xl scale-125"
-                  style={{ backgroundImage: `url(${activeMovie.poster_path})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-                />
+              <ContentCard className="w-full h-full p-3 flex flex-col justify-between relative overflow-hidden rounded-2xl">
 
                 {/* Gesture Swipe HUD Overlay Indicators */}
                 <motion.div 
                   style={{ opacity: likeIndicatorOpacity }}
-                  className="absolute top-6 left-6 -rotate-12 bg-blue-500/90 text-white font-black text-sm tracking-widest border border-blue-400/50 px-3 py-1 rounded-xl shadow-md z-30 pointer-events-none uppercase"
+                  className="absolute top-6 left-6 -rotate-12 bg-[#7C3AED] text-white font-black text-sm tracking-widest px-3 py-1 rounded-xl shadow-md z-30 pointer-events-none uppercase"
                 >
                   Me Gusta
                 </motion.div>
@@ -227,7 +222,7 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
                 </motion.div>
 
                 {/* Movie Poster Screen */}
-                <div className="relative w-full flex-1 rounded-[24px] overflow-hidden shadow-inner border border-white/10 bg-slate-950 flex flex-col justify-end">
+                <div className="relative w-full flex-1 rounded-2xl overflow-hidden shadow-sm bg-neutral-100 flex flex-col justify-end">
                   {activeMovie.poster_path ? (
                     <img 
                       src={activeMovie.poster_path} 
@@ -236,13 +231,13 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
                       draggable="false"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 font-semibold text-xs bg-slate-900">
+                    <div className="absolute inset-0 flex items-center justify-center text-neutral-500 font-semibold text-xs bg-neutral-100">
                       Póster no disponible
                     </div>
                   )}
 
                   {/* Rating indicator */}
-                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-lg flex items-center gap-1 text-amber-400 font-black text-[11px] z-20 shadow">
+                  <div className="absolute top-3 right-3 bg-white/95 border border-[#F3F4F6] px-2 py-0.5 rounded-lg flex items-center gap-1 text-amber-500 font-black text-[11px] z-20 shadow-sm">
                     <Star className="w-3 h-3 fill-current" />
                     {activeMovie.vote_average.toFixed(1)}
                   </div>
@@ -252,18 +247,18 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
                     layout
                     transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                     className={cn(
-                      "relative z-20 m-3 p-3.5 rounded-[20px]",
-                      "bg-[#0a0a0f]/80 backdrop-blur-xl border border-white/10 shadow-lg",
+                      "relative z-20 m-3 p-3.5 rounded-2xl",
+                      "bg-white/95 border border-neutral-200/70 shadow-[0_8px_30px_rgb(0,0,0,0.08)]",
                       "flex flex-col justify-end overflow-hidden transition-all duration-300"
                     )}
                     style={{ maxHeight: isExpanded ? '280px' : '90px' }}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1 min-w-0 pr-2 text-left">
-                        <h3 className="text-sm font-bold text-slate-50 truncate leading-snug">
+                        <h3 className="text-sm font-semibold text-[#0F0F10] truncate leading-snug">
                           {activeMovie.title}
                         </h3>
-                        <p className="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5 font-medium">
+                        <p className="text-[9px] text-neutral-500 flex items-center gap-1 mt-0.5 font-medium">
                           <Calendar className="w-2.5 h-2.5 text-slate-500" />
                           {activeMovie.release_date || 'N/A'}
                         </p>
@@ -276,7 +271,7 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
                         e.stopPropagation();
                         setIsExpanded(!isExpanded);
                       }}
-                      className="mt-1.5 py-0.5 w-full flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="mt-1.5 py-0.5 w-full flex items-center justify-center text-neutral-500 hover:text-[#7C3AED] transition-colors cursor-pointer"
                     >
                       {isExpanded ? (
                         <span className="text-[9px] font-bold flex items-center gap-1 uppercase tracking-wider">
@@ -296,14 +291,14 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
                         animate={{ opacity: 1 }}
                         className="mt-2 overflow-y-auto no-scrollbar max-h-[140px] text-left border-t border-white/5 pt-1.5"
                       >
-                        <p className="text-[11px] text-slate-200 leading-relaxed font-normal">
+                        <p className="text-[11px] text-neutral-600 leading-relaxed font-normal">
                           {activeMovie.overview || 'Sin descripción disponible.'}
                         </p>
                       </motion.div>
                     )}
                   </motion.div>
                 </div>
-              </GlassCard>
+              </ContentCard>
             </motion.div>
           ) : (
             /* Depleted Empty Deck State */
@@ -312,33 +307,33 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
               animate={{ scale: 1, opacity: 1 }}
               className="text-center p-6 flex flex-col items-center justify-center w-full max-w-[310px]"
             >
-              <GlassCard className="p-8 border-white/10 bg-white/5 flex flex-col items-center gap-5 shadow-2xl rounded-[28px]">
+              <ContentCard className="p-8 flex flex-col items-center gap-5">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-500 to-amber-400 flex items-center justify-center shadow-lg animate-float">
                   <Star className="w-7 h-7 text-slate-900 fill-current" />
                 </div>
                 <div className="space-y-1.5">
-                  <h2 className="text-lg font-bold text-slate-100">¡Fin de la lista!</h2>
-                  <p className="text-[11px] text-slate-400 leading-relaxed max-w-[220px]">
+                  <h2 className="text-lg font-bold text-[#1A1A1A]">¡Fin de la lista!</h2>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed max-w-[220px]">
                     Has visto todas las películas recomendadas por hoy. ¿Quieres volver a explorar?
                   </p>
                 </div>
                 <button
                   onClick={resetDeck}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 transition-all text-xs font-bold text-slate-100 hover:shadow-lg active:scale-95 cursor-pointer"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-violet-700 transition-all text-xs font-bold text-white shadow-sm active:scale-95 cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Recargar Catálogo
                 </button>
-              </GlassCard>
+              </ContentCard>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       {/* Floating Status Display */}
-      <div className="h-6 text-center text-[11px] text-slate-500 font-bold tracking-wider uppercase mb-1">
+      <div className="h-6 text-center text-[11px] text-neutral-500 font-bold tracking-wider uppercase mb-1">
         {statusText ? (
-          <span className="px-3 py-1 rounded-full bg-slate-950/80 border border-white/5 animate-pulse text-slate-400">
+          <span className="px-3 py-1 rounded-full bg-[#FAFAFA] border border-[#F3F4F6] animate-pulse text-neutral-500">
             {statusText}
           </span>
         ) : currentIndex < moviesList.length ? (
@@ -353,7 +348,7 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
           onClick={() => handleSwipeAction('DISCARD', 'left')}
           disabled={currentIndex >= moviesList.length || isPending}
           className={cn(
-            "w-14 h-14 rounded-full flex items-center justify-center transition-all bg-red-500/10 hover:bg-red-500/20 active:scale-90 border border-red-500/30 text-red-400 shadow-lg hover:shadow-red-500/10",
+            "w-14 h-14 rounded-full flex items-center justify-center transition-all bg-white hover:bg-neutral-50 active:scale-90 border border-[#0F0F10]/25 text-[#0F0F10] shadow-sm hover:shadow-md",
             "cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
           )}
           title="Descartar"
@@ -366,7 +361,7 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
           onClick={() => handleSwipeAction('MAYBE', 'up')}
           disabled={currentIndex >= moviesList.length || isPending}
           className={cn(
-            "w-12 h-12 rounded-full flex items-center justify-center transition-all bg-amber-500/10 hover:bg-amber-500/20 active:scale-90 border border-amber-500/30 text-amber-400 shadow-md hover:shadow-amber-500/10",
+            "w-12 h-12 rounded-full flex items-center justify-center transition-all bg-amber-50 hover:bg-violet-50 active:scale-90 border border-amber-100 text-[#7C3AED] shadow-sm hover:shadow-md",
             "cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
           )}
           title="Tal vez"
@@ -379,7 +374,7 @@ export default function MovieDeck({ movies: initialMovies, isFallback, roomId }:
           onClick={() => handleSwipeAction('LIKE', 'right')}
           disabled={currentIndex >= moviesList.length || isPending}
           className={cn(
-            "w-14 h-14 rounded-full flex items-center justify-center transition-all bg-blue-500/10 hover:bg-blue-500/20 active:scale-90 border border-blue-500/30 text-blue-400 shadow-lg hover:shadow-blue-500/10",
+            "w-14 h-14 rounded-full flex items-center justify-center transition-all bg-[#7C3AED] hover:bg-violet-700 active:scale-90 border border-[#7C3AED] text-white shadow-sm hover:shadow-md",
             "cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
           )}
           title="Me gusta"

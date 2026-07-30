@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07070a; /* Ultra dark Slate for high-contrast glass appearance */
-  --foreground: #f8fafc;
+  --background: #ffffff;
+  --foreground: #0f0f10;
+  --accent: #7c3aed;
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -10,15 +11,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   
-  /* Custom Glass Colors */
-  --color-glass-bg: rgba(255, 255, 255, 0.07);
-  --color-glass-border: rgba(255, 255, 255, 0.15);
-  --color-glass-bg-dark: rgba(15, 23, 42, 0.45);
-  --color-glass-border-dark: rgba(255, 255, 255, 0.08);
-  
-  /* Shadows */
-  --shadow-glass: 0 10px 30px 0 rgba(0, 0, 0, 0.25);
-  --shadow-glass-hover: 0 15px 45px 0 rgba(0, 0, 0, 0.4);
+  --color-accent: var(--accent);
+  --shadow-card: 0 12px 32px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 18px 40px rgba(15, 23, 42, 0.09);
   
   /* Typography */
   --font-sans: var(--font-sans);
@@ -32,24 +27,6 @@ body {
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
 }
-
-/* Glassmorphism Class Utilities */
-@utility glass-card-base {
-  background: rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.25);
-}
-
-@utility glass-card-dark-base {
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.4);
-}
-
 /* Hide scrollbar utility */
 @utility no-scrollbar {
   -ms-overflow-style: none;
@@ -66,23 +43,4 @@ body {
 
 @utility safe-pt {
   padding-top: env(safe-area-inset-top, 16px);
-}
-
-/* Animated gradient text */
-@utility text-glow-orange {
-  text-shadow: 0 0 12px rgba(251, 146, 60, 0.3);
-}
-
-@utility text-glow-blue {
-  text-shadow: 0 0 12px rgba(96, 165, 250, 0.3);
-}
-
-/* Smooth ambient floating transition classes */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@utility animate-float {
-  animation: float 4s ease-in-out infinite;
 }

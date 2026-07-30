@@ -20,6 +20,7 @@ export interface RoomWithMatches {
   invited_email: string;
   created_by: string | null;
   invited_user_id: string | null;
+  invite_token: string;
   created_at: string;
   matches: MatchedMovie[];
 }
@@ -64,6 +65,7 @@ export async function createRoom(name: string, invitedEmail: string) {
       .insert({
         name,
         invited_email: invitedEmail.trim().toLowerCase(),
+        invite_token: crypto.randomUUID(),
         created_by: userId,
         invited_user_id: null // Will map when the guest joins/claims it
       })
@@ -82,13 +84,61 @@ export async function createRoom(name: string, invitedEmail: string) {
   }
 }
 
+export async function joinRoomByToken(token: string) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
+    return { success: false, error: 'Invitación inválida.' };
+  }
+
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: 'Debes iniciar sesión para unirte a una sala.' };
+    }
+
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('id, invited_user_id')
+      .eq('invite_token', token)
+      .single();
+
+    if (roomError || !room) {
+      return { success: false, error: 'Esta invitación no está disponible.' };
+    }
+
+    if (room.invited_user_id && room.invited_user_id !== user.id) {
+      return { success: false, error: 'Esta invitación ya fue utilizada.' };
+    }
+
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({ invited_user_id: user.id })
+      .eq('id', room.id);
+
+    if (updateError) {
+      return { success: false, error: 'No fue posible unirte a la sala.' };
+    }
+
+    return { success: true, roomId: room.id };
+  } catch {
+    return { success: false, error: 'No fue posible procesar la invitación.' };
+  }
+}
+
 /**
  * Action: Fetch all rooms associated with the user and compute matches.
  */
-export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
+export async function fetchRoomsWithMatches(
+  currentUserId?: string,
+  currentUserEmail?: string,
+): Promise<RoomWithMatches[]> {
   try {
     const supabase = await createClient();
-    const { userId, email } = await getOrRegisterUserId(supabase);
+    const identity = currentUserId && currentUserEmail
+      ? { userId: currentUserId, email: currentUserEmail }
+      : await getOrRegisterUserId(supabase);
+    const { userId, email } = identity;
 
     // Get rooms created by user OR rooms where user's email/id is invited
     const { data: rooms, error: roomsError } = await supabase
@@ -209,4 +259,3 @@ export async function setGuestEmail(email: string) {
     return { success: false, error: error.message || 'Error al guardar el correo de invitado.' };
   }
 }
-
