@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,9 +44,11 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full bg-white text-[#0F0F10] flex justify-center items-start p-0 m-0 overflow-x-hidden">
-        <div className="w-full max-w-md min-h-screen bg-white relative flex flex-col overflow-hidden">
-          {children}
-        </div>
+        <AuthProvider>
+          <div className="w-full max-w-md min-h-screen bg-white relative flex flex-col overflow-hidden">
+            {children}
+          </div>
+        </AuthProvider>
 
         <PWAInstallBanner />
       </body>

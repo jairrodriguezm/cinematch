@@ -2,29 +2,30 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Star, Plus, Mail, Users, ArrowLeft, Copy, Check, Info, Film, Trash, Calendar } from 'lucide-react'
+import { Plus, Mail, Users, ArrowLeft, Film } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { createRoom, fetchRoomsWithMatches, setGuestEmail, RoomWithMatches, MatchedMovie } from '@/app/actions/roomActions'
+import { createRoom, fetchRoomsWithMatches, RoomWithMatches } from '@/app/actions/roomActions'
 import ContentCard from './ContentCard'
 import ShareRoomButton from './ShareRoomButton'
 
 interface RoomsDashboardProps {
   initialRooms: RoomWithMatches[];
-  currentUserEmail: string;
-  currentUserId: string;
 }
 
-export default function RoomsDashboard({ initialRooms, currentUserEmail, currentUserId }: RoomsDashboardProps) {
+export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const [rooms, setRooms] = useState<RoomWithMatches[]>(initialRooms);
   const [roomName, setRoomName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
-  const [sessionEmail, setSessionEmail] = useState(currentUserEmail);
-  
   const [formStatus, setFormStatus] = useState<{ success: boolean; message: string } | null>(null);
-  const [emailStatus, setEmailStatus] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  async function triggerRefresh() {
+    setIsRefreshing(true);
+    const updatedRooms = await fetchRoomsWithMatches();
+    setRooms(updatedRooms);
+    setIsRefreshing(false);
+  }
 
   // Sync rooms in real-time using Supabase Realtime subscriptions
   useEffect(() => {
@@ -48,13 +49,6 @@ export default function RoomsDashboard({ initialRooms, currentUserEmail, current
     };
   }, []);
 
-  const triggerRefresh = async () => {
-    setIsRefreshing(true);
-    const updatedRooms = await fetchRoomsWithMatches();
-    setRooms(updatedRooms);
-    setIsRefreshing(false);
-  };
-
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus(null);
@@ -76,32 +70,6 @@ export default function RoomsDashboard({ initialRooms, currentUserEmail, current
     }
   };
 
-  const handleSaveEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEmailStatus(null);
-
-    if (!sessionEmail.trim()) {
-      setEmailStatus('El correo no puede estar vacío.');
-      return;
-    }
-
-    const response = await setGuestEmail(sessionEmail);
-    if (response.success) {
-      setEmailStatus('Correo de sesión guardado. Recargando...');
-      setTimeout(() => {
-        window.location.reload();
-      }, 800);
-    } else {
-      setEmailStatus('Error al guardar el correo.');
-    }
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(currentUserEmail);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="flex-1 flex flex-col p-6 h-full overflow-y-auto no-scrollbar pb-12 text-[#0F0F10]">
       {/* Rooms header */}
@@ -121,53 +89,6 @@ export default function RoomsDashboard({ initialRooms, currentUserEmail, current
       <h1 className="text-xl font-semibold text-[#0F0F10] tracking-tight mb-8">
         MIS SALAS DE MATCH
       </h1>
-
-      {/* Guest Session Configuration Guide (Extremely helpful for local dev testing) */}
-      <ContentCard className="p-4 mb-6">
-        <div className="flex gap-2.5 items-start">
-          <Info className="w-5 h-5 text-[#7C3AED] shrink-0 mt-0.5" />
-          <div className="text-left space-y-3 flex-1 min-w-0">
-            <h3 className="text-xs font-semibold text-[#0F0F10] uppercase tracking-wider">
-              Simulador de Parejas Local
-            </h3>
-            <p className="text-[11px] text-neutral-500 leading-relaxed">
-              Copia tu correo e invítalo desde otra ventana (por ejemplo, ventana de incógnito o navegador secundario) para simular matches en tiempo real.
-            </p>
-            
-            <div className="flex gap-2">
-              <div className="bg-[#FAFAFA] border border-[#E5E7EB] px-3 py-1.5 rounded-xl flex items-center justify-between flex-1 min-w-0 text-xs text-neutral-600 font-mono select-all truncate">
-                {currentUserEmail}
-              </div>
-              <button 
-                onClick={copyToClipboard}
-                className="bg-white hover:bg-violet-50 border border-[#E5E7EB] p-2 rounded-xl text-[#1A1A1A] transition-all active:scale-95 cursor-pointer shrink-0"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {/* Change Guest Email form */}
-            <form onSubmit={handleSaveEmail} className="flex gap-2 pt-1">
-              <input
-                type="email"
-                value={sessionEmail}
-                onChange={(e) => setSessionEmail(e.target.value)}
-                placeholder="Cambiar mi correo de sesión"
-                className="bg-white border border-[#E5E7EB] text-xs px-3 py-1.5 rounded-xl text-[#1A1A1A] placeholder-neutral-400 flex-1 min-w-0 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-violet-100"
-              />
-              <button 
-                type="submit"
-                className="bg-[#7C3AED] hover:bg-violet-700 border border-[#7C3AED] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
-              >
-                Guardar
-              </button>
-            </form>
-            {emailStatus && (
-              <p className="text-[9px] text-amber-400 font-bold mt-1">{emailStatus}</p>
-            )}
-          </div>
-        </div>
-      </ContentCard>
 
       {/* Create room form */}
       <ContentCard className="p-5 mb-6 text-left">

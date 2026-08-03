@@ -1,8 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { Database } from '@/types/database'
+import { getMoviesByIds } from '@/lib/tmdb'
 
 export interface MatchedMovie {
   id: number;
@@ -25,27 +24,9 @@ export interface RoomWithMatches {
   matches: MatchedMovie[];
 }
 
-/**
- * Ensures a persistent guest user ID exists in the cookies if not logged in.
- */
-async function getOrRegisterUserId(supabase: any): Promise<{ userId: string; email: string }> {
-  // Check if authenticated
+async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    return { userId: user.id, email: user.email || '' };
-  }
-
-  // Fallback to guest cookie ID
-  const cookieStore = await cookies();
-  let guestId = cookieStore.get('cinematch_user_id')?.value;
-  let guestEmail = cookieStore.get('cinematch_guest_email')?.value || 'invitado@cinematch.com';
-  
-  if (!guestId) {
-    guestId = crypto.randomUUID();
-    cookieStore.set('cinematch_user_id', guestId, { maxAge: 60 * 60 * 24 * 365, path: '/' });
-  }
-
-  return { userId: guestId, email: guestEmail };
+  return user;
 }
 
 /**
@@ -54,7 +35,9 @@ async function getOrRegisterUserId(supabase: any): Promise<{ userId: string; ema
 export async function createRoom(name: string, invitedEmail: string) {
   try {
     const supabase = await createClient();
-    const { userId } = await getOrRegisterUserId(supabase);
+    const user = await getAuthenticatedUser(supabase);
+
+    if (!user) return { success: false, error: 'Debes iniciar sesión para crear una sala.' };
 
     if (!name || !invitedEmail) {
       return { success: false, error: 'Por favor complete todos los campos requeridos.' };
@@ -66,7 +49,7 @@ export async function createRoom(name: string, invitedEmail: string) {
         name,
         invited_email: invitedEmail.trim().toLowerCase(),
         invite_token: crypto.randomUUID(),
-        created_by: userId,
+        created_by: user.id,
         invited_user_id: null // Will map when the guest joins/claims it
       })
       .select()
@@ -78,9 +61,12 @@ export async function createRoom(name: string, invitedEmail: string) {
     }
 
     return { success: true, room: newRoom };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Exception in createRoom:', error);
-    return { success: false, error: error.message || 'Error interno al procesar la creación de sala.' };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error interno al procesar la creación de sala.',
+    };
   }
 }
 
@@ -129,22 +115,17 @@ export async function joinRoomByToken(token: string) {
 /**
  * Action: Fetch all rooms associated with the user and compute matches.
  */
-export async function fetchRoomsWithMatches(
-  currentUserId?: string,
-  currentUserEmail?: string,
-): Promise<RoomWithMatches[]> {
+export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
   try {
     const supabase = await createClient();
-    const identity = currentUserId && currentUserEmail
-      ? { userId: currentUserId, email: currentUserEmail }
-      : await getOrRegisterUserId(supabase);
-    const { userId, email } = identity;
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return [];
 
     // Get rooms created by user OR rooms where user's email/id is invited
     const { data: rooms, error: roomsError } = await supabase
       .from('rooms')
       .select('*')
-      .or(`created_by.eq.${userId},invited_user_id.eq.${userId},invited_email.eq.${email}`);
+      .or(`created_by.eq.${user.id},invited_user_id.eq.${user.id},invited_email.eq.${user.email ?? ''}`);
 
     if (roomsError) {
       console.error('Error loading rooms:', roomsError);
@@ -158,11 +139,17 @@ export async function fetchRoomsWithMatches(
     const roomsWithMatches: RoomWithMatches[] = [];
 
     for (const room of rooms) {
-      // 1. Fetch all user interactions in this room
+      const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
+      if (memberIds.length < 2) {
+        roomsWithMatches.push({ ...room, matches: [] });
+        continue;
+      }
+
+      // Ratings are user-owned, not room-owned. A room only determines its two members.
       const { data: interactions, error: interactionsError } = await supabase
         .from('user_interactions')
         .select('*')
-        .eq('room_id', room.id);
+        .in('user_id', memberIds);
 
       if (interactionsError || !interactions) {
         roomsWithMatches.push({ ...room, matches: [] });
@@ -175,7 +162,7 @@ export async function fetchRoomsWithMatches(
         if (!movieInteractionsMap[interaction.movie_id]) {
           movieInteractionsMap[interaction.movie_id] = [];
         }
-        // Avoid duplicate votes from the same user on the same movie
+        // Keep a single rating per user/movie pair.
         const alreadyExists = movieInteractionsMap[interaction.movie_id].some(
           existing => existing.user_id === interaction.user_id
         );
@@ -188,22 +175,9 @@ export async function fetchRoomsWithMatches(
 
       Object.entries(movieInteractionsMap).forEach(([movieIdStr, votes]) => {
         const movieId = parseInt(movieIdStr);
-        // We need exactly two different members' votes to form a match in this room
-        if (votes.length >= 2) {
-          const vote1 = votes[0];
-          const vote2 = votes[1];
-
-          const isPrimary = vote1.action === 'LIKE' && vote2.action === 'LIKE';
-          const isSecondary = 
-            (vote1.action === 'LIKE' || vote1.action === 'MAYBE') &&
-            (vote2.action === 'LIKE' || vote2.action === 'MAYBE') &&
-            !isPrimary;
-
-          if (isPrimary) {
-            matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
-          } else if (isSecondary) {
-            matchedMovieIds.push({ movieId, matchType: 'SECONDARY' });
-          }
+        const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
+        if (memberIds.every((userId) => (ratingsByUser.get(userId) ?? 0) >= 7)) {
+          matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       });
 
@@ -212,14 +186,12 @@ export async function fetchRoomsWithMatches(
         continue;
       }
 
-      // Fetch matching movies descriptions
+      // Match metadata comes directly from TMDB, never from a Supabase movie catalog.
       const movieIds = matchedMovieIds.map(m => m.movieId);
-      const { data: moviesData, error: moviesError } = await supabase
-        .from('movies')
-        .select('*')
-        .in('id', movieIds);
-
-      if (moviesError || !moviesData) {
+      let moviesData: Awaited<ReturnType<typeof getMoviesByIds>>;
+      try {
+        moviesData = await getMoviesByIds(movieIds);
+      } catch {
         roomsWithMatches.push({ ...room, matches: [] });
         continue;
       }
@@ -243,19 +215,5 @@ export async function fetchRoomsWithMatches(
   } catch (err) {
     console.error('Exception fetching rooms with matches:', err);
     return [];
-  }
-}
-
-/**
- * Action: Set guest email in cookies for local testing.
- */
-export async function setGuestEmail(email: string) {
-  try {
-    const cookieStore = await cookies();
-    cookieStore.set('cinematch_guest_email', email.trim().toLowerCase(), { maxAge: 60 * 60 * 24 * 365, path: '/' });
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error saving guest email:', error);
-    return { success: false, error: error.message || 'Error al guardar el correo de invitado.' };
   }
 }

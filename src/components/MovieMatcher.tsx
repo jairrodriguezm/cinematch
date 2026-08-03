@@ -77,8 +77,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
     // Execute the Server Action
     const result = await saveMovieInteraction(
       activeMovie.id,
-      activeMovie.title,
-      action
+      action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
     );
 
     if (result.success) {

@@ -1,75 +1,76 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { MovieInteractionAction } from '@/types/database'
-import { cookies } from 'next/headers'
+import { getMoviesByReleaseDate, type TMDBMovie } from '@/lib/tmdb'
 
-interface InteractionResponse {
+interface RatingResponse {
   success: boolean;
   error?: string;
 }
 
 /**
- * Upserts a movie into the `movies` table if not present,
- * and inserts a swipe record ('LIKE', 'MAYBE', 'DISCARD') into `user_interactions`.
+ * Saves one user-owned numeric rating for a TMDB movie.
  */
 export async function saveMovieInteraction(
   movieId: number,
-  title: string,
-  action: MovieInteractionAction,
-  roomId?: string
-): Promise<InteractionResponse> {
+  rating: number,
+): Promise<RatingResponse> {
   try {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
+      return { success: false, error: 'La puntuación debe estar entre 1 y 10.' }
+    }
     const supabase = await createClient();
 
-    // 1. Upsert the movie information into the movies database table
-    const { error: movieError } = await supabase
-      .from('movies')
-      .upsert({ id: movieId, title }, { onConflict: 'id' });
-
-    if (movieError) {
-      console.error('Error al realizar upsert de la película:', movieError);
-      return { 
-        success: false, 
-        error: `No se pudo registrar la película en la base de datos: ${movieError.message}` 
-      };
-    }
-
-    // 2. Fetch authenticated user, fallback to guest cookie id
+    // Authentication is required; movie data stays in TMDB, never in Supabase.
     const { data: { user } } = await supabase.auth.getUser();
-    
-    const cookieStore = await cookies();
-    let guestId = cookieStore.get('cinematch_user_id')?.value;
-    if (!guestId) {
-      guestId = crypto.randomUUID();
-      cookieStore.set('cinematch_user_id', guestId, { maxAge: 60 * 60 * 24 * 365, path: '/' });
-    }
-    const finalUserId = user?.id || guestId;
+    if (!user) return { success: false, error: 'Debes iniciar sesión para votar.' }
 
-    // 3. Save the swipe choice
-    const { error: interactionError } = await supabase
+    const { error: ratingError } = await supabase
       .from('user_interactions')
-      .insert({
+      .upsert({
         movie_id: movieId,
-        action: action,
-        user_id: finalUserId,
-        room_id: roomId || null
-      });
+        rating,
+        user_id: user.id,
+      }, { onConflict: 'user_id,movie_id' })
 
-    if (interactionError) {
-      console.error('Error al insertar interacción de usuario:', interactionError);
+    if (ratingError) {
+      console.error('Error al guardar la puntuación:', ratingError);
       return { 
         success: false, 
-        error: `No se pudo registrar su interacción: ${interactionError.message}` 
+        error: `No se pudo guardar la puntuación: ${ratingError.message}`
       };
     }
 
     return { success: true };
-  } catch (error: any) {
-    console.error('Excepción atrapada en saveMovieInteraction Server Action:', error);
+  } catch (error: unknown) {
+    console.error('Error al guardar la puntuación:', error);
     return { 
       success: false, 
-      error: error.message || 'Ocurrió un error inesperado al procesar la interacción en el servidor.' 
+      error: error instanceof Error ? error.message : 'Ocurrió un error inesperado al procesar la interacción en el servidor.'
     };
   }
+}
+
+interface MovieQueueResponse {
+  movies: TMDBMovie[]
+  nextPage: number
+}
+
+export async function getUnratedMovieQueue(startPage: number): Promise<MovieQueueResponse> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { movies: [], nextPage: Math.max(1, startPage) }
+
+  const { data: interactions, error } = await supabase
+    .from('user_interactions')
+    .select('movie_id')
+    .eq('user_id', user.id)
+
+  const ratedIds = error ? new Set<number>() : new Set((interactions ?? []).map(({ movie_id }) => movie_id))
+  for (let page = Math.max(1, startPage); page <= 500; page += 1) {
+    const movies = (await getMoviesByReleaseDate(page)).filter((movie) => !ratedIds.has(movie.id))
+    if (movies.length > 0) return { movies, nextPage: page + 1 }
+  }
+
+  return { movies: [], nextPage: 501 }
 }

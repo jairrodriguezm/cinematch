@@ -20,7 +20,7 @@ export default function JoinRoomClient({ token }: JoinRoomClientProps) {
 
       const { data: { user } } = await createClient().auth.getUser()
       if (!user) {
-        router.replace(`/auth?next=${encodeURIComponent(`/rooms/join?token=${token}`)}`)
+        router.replace(`/login?next=${encodeURIComponent(`/rooms/join?token=${token}`)}`)
         return
       }
 

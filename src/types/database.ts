@@ -1,5 +1,3 @@
-export type MovieInteractionAction = 'LIKE' | 'MAYBE' | 'DISCARD';
-
 export interface Database {
   public: {
     Tables: {
@@ -68,24 +66,21 @@ export interface Database {
           id: string;
           user_id: string | null;
           movie_id: number;
-          room_id: string | null;
-          action: MovieInteractionAction;
+          rating: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id?: string | null;
           movie_id: number;
-          room_id?: string | null;
-          action: MovieInteractionAction;
+          rating: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string | null;
           movie_id?: number;
-          room_id?: string | null;
-          action?: MovieInteractionAction;
+          rating?: number;
           created_at?: string;
         };
         Relationships: [
@@ -96,13 +91,6 @@ export interface Database {
             referencedRelation: "movies";
             referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "user_interactions_room_id_fkey";
-            columns: ["room_id"];
-            isOneToOne: false;
-            referencedRelation: "rooms";
-            referencedColumns: ["id"];
-          }
         ];
       };
     };
@@ -112,9 +100,7 @@ export interface Database {
     Functions: {
       [_ in never]: never;
     };
-    Enums: {
-      action_type: MovieInteractionAction;
-    };
+      Enums: Record<never, never>;
     CompositeTypes: {
       [_ in never]: never;
     };
