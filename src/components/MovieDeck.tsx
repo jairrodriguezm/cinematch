@@ -20,7 +20,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [rating, setRating] = useState<number>(7)
-  const [showOverview, setShowOverview] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const activeMovie = queue[0] ?? null
@@ -65,7 +65,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
 
     const targetMovie = activeMovie
     setQueue((prev) => prev.slice(1))
-    setShowOverview(false)
+    setIsExpanded(false)
 
     try {
       const res = await saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
@@ -199,19 +199,19 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
                   </p>
 
                   <div className="mt-1 flex flex-col gap-0.5">
-                    <p className={`text-xs text-white/80 leading-relaxed font-normal ${showOverview ? '' : 'line-clamp-2'}`}>
-                      {activeMovie.overview || 'Sin descripción disponible.'}
+                    <p className={`text-xs text-white/80 leading-relaxed font-normal ${isExpanded ? '' : 'line-clamp-2'}`}>
+                      {activeMovie.overview && activeMovie.overview.trim() ? activeMovie.overview : 'Sin descripción disponible.'}
                     </p>
-                    {activeMovie.overview && (
+                    {activeMovie.overview && activeMovie.overview.trim().length > 120 && (
                       <button
                         type="button"
-                        onClick={() => setShowOverview(!showOverview)}
+                        onClick={() => setIsExpanded(!isExpanded)}
                         className="text-[#bc96ff] font-mono text-[11px] font-semibold uppercase tracking-wider text-left flex items-center gap-0.5 mt-0.5 cursor-pointer hover:underline"
                       >
-                        {showOverview ? (
-                          <>Ver menos <ChevronUp className="w-3 h-3" /></>
+                        {isExpanded ? (
+                          <>VER MENOS <ChevronUp className="w-3 h-3" /></>
                         ) : (
-                          <>Ver más <ChevronDown className="w-3 h-3" /></>
+                          <>VER MÁS <ChevronDown className="w-3 h-3" /></>
                         )}
                       </button>
                     )}
