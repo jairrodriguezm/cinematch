@@ -1,25 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #371f7d;
+  --background: #000000;
   --foreground: #ffffff;
   --font-inter: 'Inter', sans-serif;
   --font-hanken: 'Hanken Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --color-secondary: #f5c518;
 }
 
 @theme {
-  --color-background: #371f7d;
+  --color-background: #000000;
   --color-foreground: #ffffff;
-  --color-primary-container: #bc96ff;
-  --color-secondary: #ff4365;
+  --color-primary-container: #f5c518;
+  --color-secondary: #f5c518;
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-hanken), sans-serif;
   --font-mono: var(--font-mono), monospace;
 }
 
 body {
-  background-color: #371f7d;
+  background-color: #000000;
   color: #ffffff;
   font-family: var(--font-sans);
   min-height: 100vh;
@@ -28,10 +29,10 @@ body {
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .pulse-dot {
@@ -39,9 +40,9 @@ body {
 }
 
 @keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(188, 150, 255, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(188, 150, 255, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(188, 150, 255, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 197, 24, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 197, 24, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 197, 24, 0); }
 }
 
 input[type=range]::-webkit-slider-thumb {
@@ -49,10 +50,10 @@ input[type=range]::-webkit-slider-thumb {
   height: 24px;
   width: 24px;
   border-radius: 50%;
-  background: #bc96ff;
+  background: #f5c518;
   cursor: pointer;
   margin-top: -8px;
-  box-shadow: 0 0 15px rgba(188,150,255,0.5);
+  box-shadow: 0 0 15px rgba(245,197,24,0.5);
 }
 
 input[type=range]::-webkit-slider-runnable-track {

@@ -156,8 +156,8 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
                   )}
 
                   {/* Rating Badge */}
-                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg flex items-center gap-1 text-amber-400 font-bold text-xs">
-                    <Star className="w-3.5 h-3.5 fill-current" />
+                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg flex items-center gap-1 text-sky-400 font-bold text-xs">
+                    <Star className="w-3.5 h-3.5 fill-[#38bdf8] text-[#38bdf8]" />
                     {activeMovie.vote_average.toFixed(1)}
                   </div>
                 </div>

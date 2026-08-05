@@ -73,8 +73,8 @@ function LoginForm() {
   }
 
   return (
-    <section className="w-full rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_12px_40px_rgba(15,15,16,0.06)]">
-      <p className="text-sm font-semibold text-[#7C3AED]">Movie Match</p>
+    <section className="w-full rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_12px_40px_rgba(15,15,16,0.06)] text-black">
+      <p className="text-sm font-bold text-[#f5c518]">Movie Match</p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#0F0F10]">Inicia sesión</h1>
       <p className="mt-2 text-sm leading-6 text-neutral-500">Recibe un enlace seguro o continúa con tu cuenta de Google.</p>
 
@@ -91,10 +91,10 @@ function LoginForm() {
             placeholder="tu@correo.com"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'login-error' : undefined}
-            className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100 aria-[invalid=true]:border-red-400"
+            className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#f5c518] focus:ring-4 focus:ring-amber-100 aria-[invalid=true]:border-red-400"
           />
         </label>
-        <button type="submit" disabled={pending !== null} className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60">
+        <button type="submit" disabled={pending !== null} className="w-full rounded-xl bg-[#f5c518] px-4 py-3 text-sm font-extrabold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md">
           {pending === 'magic' ? 'Enviando enlace...' : 'Enviar enlace mágico'}
         </button>
       </form>

@@ -28,9 +28,9 @@ export default function ShareRoomButton({ token, roomName }: ShareRoomButtonProp
     <button
       type="button"
       onClick={() => void shareRoom()}
-      className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-[#7C3AED] transition-colors hover:bg-violet-100 active:scale-95"
+      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-[#f5c518] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-black transition-colors hover:bg-amber-400 active:scale-95 shadow-sm"
     >
-      <Share2 className="h-3 w-3" />
+      <Share2 className="h-3 w-3 text-black" />
       Compartir
     </button>
   )

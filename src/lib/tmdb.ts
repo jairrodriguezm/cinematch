@@ -119,3 +119,37 @@ export async function getMovieCredits(movieId: number): Promise<TMDBCastMember[]
     return [];
   }
 }
+
+export interface TMDBWatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+}
+
+export async function getWatchProviders(movieId: number): Promise<TMDBWatchProvider[]> {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/watch/providers?api_key=${apiKey}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results = data.results || {};
+    const coFlatrate = results.CO?.flatrate;
+    const usFlatrate = results.US?.flatrate;
+    const providers = (Array.isArray(coFlatrate) && coFlatrate.length > 0)
+      ? coFlatrate
+      : (Array.isArray(usFlatrate) ? usFlatrate : []);
+
+    return providers.map((p: { provider_id: number; provider_name: string; logo_path?: string | null }) => ({
+      provider_id: p.provider_id,
+      provider_name: p.provider_name,
+      logo_path: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null,
+    }));
+  } catch (error) {
+    console.error('Error fetching watch providers:', error);
+    return [];
+  }
+}

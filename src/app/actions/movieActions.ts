@@ -119,3 +119,13 @@ export async function fetchMovieCast(movieId: number): Promise<TMDBCastMember[]>
   }
   return [];
 }
+
+export async function fetchWatchProviders(movieId: number): Promise<import('@/lib/tmdb').TMDBWatchProvider[]> {
+  try {
+    const providers = await import('@/lib/tmdb').then((m) => m.getWatchProviders(movieId));
+    if (providers && providers.length > 0) return providers;
+  } catch (error) {
+    console.error('Error fetching watch providers in server action:', error);
+  }
+  return [];
+}

@@ -10,8 +10,8 @@ interface RatingSelectorProps {
 
 function ratingClass(rating: number) {
   if (rating <= 4) return 'bg-neutral-200 text-neutral-700'
-  if (rating <= 7) return 'bg-violet-200 text-violet-800'
-  return 'bg-violet-600 text-white'
+  if (rating <= 7) return 'bg-amber-200 text-amber-900'
+  return 'bg-[#f5c518] text-black font-extrabold shadow-md'
 }
 
 export default function RatingSelector({ value, onChange, disabled }: RatingSelectorProps) {

@@ -24,7 +24,7 @@ export default function TopNavigation() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatarUrl} alt="" className="size-7 shrink-0 rounded-full object-cover ring-2 ring-white" referrerPolicy="no-referrer" />
           ) : (
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-[#7C3AED] ring-2 ring-white">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-[#f5c518] ring-2 ring-white">
               {user.email?.charAt(0).toUpperCase() ?? 'U'}
             </span>
           )}

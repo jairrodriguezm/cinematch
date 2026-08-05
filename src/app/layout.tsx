@@ -26,7 +26,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#371f7d",
+  themeColor: "#000000",
 };
 
 export const metadata: Metadata = {
@@ -51,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable} ${hanken.variable} ${jetbrains.variable} dark h-full antialiased`}>
-      <body className="bg-[#371f7d] text-white h-screen max-h-screen overflow-hidden flex flex-col font-sans relative select-none p-0 m-0">
+      <body className="bg-black text-white h-screen max-h-screen overflow-hidden flex flex-col font-sans relative select-none p-0 m-0">
         <AuthProvider>
           <div className="w-full h-full relative flex flex-col overflow-hidden">
             {children}

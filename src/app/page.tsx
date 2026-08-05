@@ -12,7 +12,7 @@ export default async function Home({ searchParams }: PageProps) {
   const roomId = typeof roomParam === 'string' ? roomParam : undefined;
 
   return (
-    <main className="flex-1 flex flex-col justify-between h-full overflow-hidden bg-[#371f7d]">
+    <main className="flex-1 flex flex-col justify-between h-full overflow-hidden bg-black">
       <MovieDeck roomId={roomId} />
     </main>
   );

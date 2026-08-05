@@ -76,7 +76,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       <div className="flex items-center justify-between mb-6">
         <Link 
           href="/" 
-          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#7C3AED] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full"
+          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#f5c518] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Volver a Deslizar
@@ -93,7 +93,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       {/* Create room form */}
       <ContentCard className="p-5 mb-6 text-left">
         <h2 className="text-sm font-semibold text-[#0F0F10] uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-[#7C3AED]" />
+          <Plus className="w-4 h-4 text-[#f5c518]" />
           Crear Nueva Sala de Match
         </h2>
         
@@ -107,7 +107,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
               placeholder="Ej. Cine de Fin de Semana"
-              className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-xl text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-violet-100"
+              className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-xl text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#f5c518] focus:ring-2 focus:ring-amber-100"
             />
           </div>
 
@@ -120,13 +120,13 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
               value={invitedEmail}
               onChange={(e) => setInvitedEmail(e.target.value)}
               placeholder="Ej. mi_pareja@gmail.com"
-              className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-xl text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-violet-100"
+              className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-xl text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#f5c518] focus:ring-2 focus:ring-amber-100"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-[#7C3AED] hover:bg-violet-700 active:scale-[0.98] text-white text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl bg-[#f5c518] hover:bg-amber-400 active:scale-[0.98] text-black text-xs font-extrabold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
           >
             <Users className="w-4 h-4" />
             Crear Sala
@@ -181,7 +181,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                     <ShareRoomButton token={room.invite_token} roomName={room.name} />
                     <Link
                       href={`/?room=${room.id}`}
-                      className="text-[9px] font-black text-[#7C3AED] border border-violet-200 bg-violet-50 px-2.5 py-1 rounded-full uppercase tracking-wider hover:bg-violet-100 active:scale-95"
+                      className="text-[9px] font-black text-black border border-amber-300 bg-[#f5c518] px-2.5 py-1 rounded-full uppercase tracking-wider hover:bg-amber-400 active:scale-95"
                     >
                       Entrar a votar
                     </Link>
