@@ -1,46 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f0f10;
-  --accent: #7c3aed;
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --background: #371f7d;
+  --foreground: #ffffff;
+  --font-inter: 'Inter', sans-serif;
+  --font-hanken: 'Hanken Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  
-  --color-accent: var(--accent);
-  --shadow-card: 0 12px 32px rgba(15, 23, 42, 0.06);
-  --shadow-card-hover: 0 18px 40px rgba(15, 23, 42, 0.09);
-  
-  /* Typography */
-  --font-sans: var(--font-sans);
+  --color-background: #371f7d;
+  --color-foreground: #ffffff;
+  --color-primary-container: #bc96ff;
+  --color-secondary: #ff4365;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-hanken), sans-serif;
+  --font-mono: var(--font-mono), monospace;
 }
 
-/* Base body layout reset */
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: #371f7d;
+  color: #ffffff;
   font-family: var(--font-sans);
+  min-height: 100vh;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
 }
-/* Hide scrollbar utility */
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pulse-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(188, 150, 255, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(188, 150, 255, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(188, 150, 255, 0); }
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: #bc96ff;
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow: 0 0 15px rgba(188,150,255,0.5);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.2) 100%);
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
 @utility no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
   }
-}
-
-/* Safe areas helper classes for mobile PWA */
-@utility safe-pb {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-}
-
-@utility safe-pt {
-  padding-top: env(safe-area-inset-top, 16px);
 }

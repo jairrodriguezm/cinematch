@@ -11,19 +11,38 @@ interface ContentCardProps extends Omit<HTMLMotionProps<'div'>, 'className'> {
   delay?: number
 }
 
-export default function ContentCard({ children, className, hoverable = false, delay = 0, ...props }: ContentCardProps) {
+export default function ContentCard({
+  children,
+  className,
+  hoverable = false,
+  delay = 0,
+  ...props
+}: ContentCardProps) {
+  const animationProps = hoverable
+    ? {
+        whileHover: { 
+          y: -2,
+          boxShadow: "0 14px 35px rgba(0, 0, 0, 0.07)",
+        },
+        whileTap: { 
+          scale: 0.99,
+        },
+        transition: { type: "spring" as const, stiffness: 400, damping: 25 }
+      }
+    : {}
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay, ease: 'easeOut' }}
-      whileHover={hoverable ? { y: -2, boxShadow: '0 18px 40px rgba(15, 23, 42, 0.09)' } : undefined}
-      whileTap={hoverable ? { scale: 0.99 } : undefined}
+      transition={{ duration: 0.3, delay: delay, ease: "easeOut" }}
       className={cn(
-        'rounded-3xl border border-neutral-200/70 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow duration-200',
-        hoverable && 'cursor-pointer select-none',
-        className,
+        "bg-white border border-[#F3F4F6] shadow-[0_10px_30px_rgba(0,0,0,0.05)] rounded-2xl p-5",
+        "transition-all duration-200",
+        hoverable && "cursor-pointer select-none",
+        className
       )}
+      {...animationProps}
       {...props}
     >
       {children}

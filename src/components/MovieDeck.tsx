@@ -1,267 +1,258 @@
-'use client'
+'use client';
 
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, ChevronUp, ChevronDown, Calendar, RotateCcw, Users } from 'lucide-react'
-import ContentCard from './ContentCard'
+import { Star, ChevronDown, ChevronUp, Radio, User, RotateCcw, AlertCircle, RefreshCw } from 'lucide-react'
+import RatingSlider from './RatingSlider'
+import MovieCast from './MovieCast'
 import { type TMDBMovie } from '@/lib/tmdb'
 import { getUnratedMovieQueue, saveMovieInteraction } from '@/app/actions/movieActions'
-import { cn } from '@/lib/utils'
-import Link from 'next/link'
-import TopNavigation from './TopNavigation'
-import RatingSlider from './RatingSlider'
-
-
-const EMPTY_MOVIES: TMDBMovie[] = [];
+import { useAuth } from '@/context/AuthContext'
 
 interface MovieDeckProps {
-  roomId?: string;
+  roomId?: string
 }
 
 export default function MovieDeck({ roomId }: MovieDeckProps) {
-  const [movies, setMovies] = useState<TMDBMovie[]>(EMPTY_MOVIES);
-  const [nextPage, setNextPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [statusText, setStatusText] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
-  const [rating, setRating] = useState(7);
+  const { user } = useAuth()
+  const [queue, setQueue] = useState<TMDBMovie[]>([])
+  const [nextPage, setNextPage] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [rating, setRating] = useState<number>(7)
+  const [showOverview, setShowOverview] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const activeMovie = movies[currentIndex];
+  const activeMovie = queue[0] ?? null
 
   useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const queue = await getUnratedMovieQueue(1)
-        if (cancelled) return
-        setMovies(queue.movies)
-        setNextPage(queue.nextPage)
-        setCurrentIndex(0)
-        setLoadError(null)
-      } catch (error) {
-        if (!cancelled) setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar películas.')
-      } finally {
-        if (!cancelled) setIsLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [roomId])
+    if (activeMovie && activeMovie.vote_average !== undefined) {
+      const nearestInt = Math.max(1, Math.min(10, Math.round(activeMovie.vote_average)))
+      setRating(nearestInt)
+    }
+  }, [activeMovie?.id, activeMovie?.vote_average])
 
-  const loadNextQueue = async () => {
-    setIsLoading(true)
+  const fetchMoreMovies = useCallback(async (pageToFetch: number) => {
+    console.log('[MovieDeck] Fetching movie queue for page:', pageToFetch)
     try {
-      const queue = await getUnratedMovieQueue(nextPage)
-      setMovies(queue.movies)
-      setNextPage(queue.nextPage)
-      setCurrentIndex(0)
-      setLoadError(null)
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar más películas.')
+      setLoading(true)
+      setErrorMessage(null)
+      const res = await getUnratedMovieQueue(pageToFetch)
+      console.log('[MovieDeck] Received movies count:', res.movies.length)
+      setQueue((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id))
+        const newMovies = res.movies.filter((m) => !existingIds.has(m.id))
+        return [...prev, ...newMovies]
+      })
+      setNextPage(res.nextPage)
+    } catch (err: unknown) {
+      console.error('[MovieDeck] Error loading movie queue:', err)
+      setErrorMessage('No se pudieron obtener películas del servidor.')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
-  }
+  }, [])
 
-  const submitRating = async (selectedRating = rating) => {
-    if (currentIndex >= movies.length || isPending || !activeMovie) return;
-    setIsPending(true);
-    setStatusText(`Guardando puntuación: ${selectedRating}/10`);
+  useEffect(() => {
+    void fetchMoreMovies(1)
+  }, [fetchMoreMovies])
+
+  const handleRatingSubmit = async (scoreToSubmit: number) => {
+    if (!activeMovie || submitting) return
+    console.log('[MovieDeck] Submitting rating:', scoreToSubmit, 'for movie:', activeMovie.title)
+    setSubmitting(true)
+    setErrorMessage(null)
+
+    const targetMovie = activeMovie
+    setQueue((prev) => prev.slice(1))
+    setShowOverview(false)
 
     try {
-      const result = await saveMovieInteraction(activeMovie.id, selectedRating);
-      if (!result.success) throw new Error(result.error);
-    } catch (error) {
-      console.error("Error al guardar la puntuación:", error);
-      setStatusText(error instanceof Error ? error.message : 'No se pudo guardar tu voto.');
-      setIsPending(false);
-      return;
+      const res = await saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
+      if (!res.success) {
+        console.error('[MovieDeck] Save interaction failed:', res.error)
+        setErrorMessage(res.error || 'Error al guardar la calificación.')
+        setQueue((prev) => [targetMovie, ...prev])
+      }
+    } catch (err: unknown) {
+      console.error('[MovieDeck] Save interaction exception:', err)
+      setErrorMessage('Error al conectar con el servidor.')
+      setQueue((prev) => [targetMovie, ...prev])
+    } finally {
+      setSubmitting(false)
     }
 
-    setIsExpanded(false);
-    setCurrentIndex((prev) => prev + 1);
-    setStatusText(null);
-    setIsPending(false);
+    if (queue.length <= 3 && !loading) {
+      void fetchMoreMovies(nextPage)
+    }
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between p-6 h-full select-none">
-      {/* iOS App Navigation Header */}
-      <div className="flex flex-col gap-3 text-center mt-2 mb-3">
-        <header className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/75 px-3 py-2.5 shadow-[0_8px_24px_rgba(15,15,16,0.06)] backdrop-blur-xl">
-          <h1 className="shrink-0 text-lg font-black tracking-[0.16em] text-[#1A1A1A]">
+    <div className="w-full min-h-screen bg-[#371f7d] text-white flex flex-col justify-between items-center relative overflow-hidden font-sans select-none">
+      {/* Fullscreen Hero Background Poster */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {activeMovie?.poster_path ? (
+          <img
+            src={activeMovie.poster_path}
+            alt={activeMovie.title}
+            className="w-full h-full object-cover transition-all duration-500"
+          />
+        ) : (
+          <div className="w-full h-full bg-[#371f7d]" />
+        )}
+        {/* Gradient Overlay for legibility */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(to top, #371f7d 30%, rgba(55, 31, 125, 0.8) 65%, transparent)'
+          }}
+        />
+      </div>
+
+      {/* Header (TopAppBar) */}
+      <header className="bg-transparent backdrop-blur-md fixed top-0 w-full z-50 flex justify-between items-center px-5 py-3.5 border-b border-white/5">
+        <button
+          type="button"
+          aria-label="Sensores en vivo"
+          className="text-[#bc96ff] hover:opacity-80 transition-opacity cursor-pointer"
+        >
+          <Radio className="w-6 h-6" />
+        </button>
+
+        <div className="flex flex-col items-center">
+          <h1 className="font-display text-lg font-extrabold tracking-widest text-white uppercase drop-shadow-md">
             CINEMATCH
           </h1>
-          <TopNavigation />
-        </header>
-        
-        {roomId && (
-          <p className="text-[9px] text-[#7C3AED] font-black tracking-widest uppercase bg-violet-50 border border-violet-100 px-2.5 py-0.5 rounded-md">
-            Modo de Sala Activo 👥
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="w-2 h-2 rounded-full bg-[#bc96ff] pulse-dot"></div>
+            <span className="font-mono text-[10px] font-semibold text-[#bc96ff] uppercase tracking-wider drop-shadow-md">
+              EN DIRECTO
+            </span>
+          </div>
+        </div>
+
+        <div
+          className="w-9 h-9 rounded-full overflow-hidden border border-white/10 hover:opacity-80 transition-opacity bg-[#1f1f23] flex items-center justify-center text-white font-bold text-xs"
+          title={user?.email || 'Perfil'}
+        >
+          {user?.email ? user.email[0].toUpperCase() : <User className="w-4 h-4 text-white/80" />}
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="relative z-10 flex-1 flex flex-col justify-end pt-[15vh] pb-[130px] px-5 md:px-10 max-w-[550px] mx-auto w-full">
+        {errorMessage && (
+          <div className="mb-3 p-3 rounded-xl bg-red-900/80 border border-red-500 text-red-100 text-xs font-medium flex items-center justify-between gap-2 shadow-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+            <button
+              onClick={() => void fetchMoreMovies(1)}
+              className="underline text-white font-bold hover:text-red-200 text-xs"
+            >
+              Reintentar
+            </button>
+          </div>
         )}
 
-        <div className="flex gap-2 items-center mt-1">
-          <div className="flex gap-1.5 items-center bg-[#FAFAFA] border border-[#F3F4F6] px-3 py-1 rounded-full text-[10px] font-semibold text-neutral-500 tracking-wide uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            {isLoading ? 'Cargando' : 'En Directo'}
+        {loading && queue.length === 0 ? (
+          /* Glassmorphic Loading Spinner Skeleton */
+          <div className="flex flex-col items-center justify-center gap-3 py-20 text-center my-auto">
+            <div className="w-12 h-12 border-4 border-[#bc96ff] border-t-transparent rounded-full animate-spin shadow-lg"></div>
+            <p className="text-xs font-semibold text-[#e4e1e7] uppercase tracking-wider">Cargando películas...</p>
           </div>
-          <Link 
-            href="/rooms" 
-            className="flex gap-1 items-center bg-white hover:bg-violet-50 border border-[#E5E7EB] px-3 py-1.5 rounded-full text-[10px] font-black text-[#1A1A1A] tracking-wide uppercase cursor-pointer transition-all active:scale-95"
-          >
-            <Users className="w-3 h-3 text-[#7C3AED]" />
-            Salas
-          </Link>
-        </div>
-      </div>
-
-      {/* Movie Deck Viewport */}
-      <div className="flex-1 flex items-center justify-center relative min-h-[380px] my-2">
-        <AnimatePresence mode="wait">
-          {currentIndex < movies.length ? (
+        ) : activeMovie ? (
+          <AnimatePresence mode="wait">
             <motion.div
               key={activeMovie.id}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              className="absolute w-full max-w-[330px] aspect-[9/14] z-10"
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-3 w-full"
             >
-              <ContentCard className="w-full h-full p-3 flex flex-col justify-between relative overflow-hidden rounded-2xl">
-
-                {/* Movie Poster Screen */}
-                <div className="relative w-full flex-1 rounded-2xl overflow-hidden shadow-sm bg-neutral-100 flex flex-col justify-end">
-                  {activeMovie.poster_path ? (
-                    <img 
-                      src={activeMovie.poster_path} 
-                      alt={activeMovie.title}
-                      className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
-                      draggable="false"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-neutral-500 font-semibold text-xs bg-neutral-100">
-                      Póster no disponible
+              {/* Movie Info Overlay */}
+              <div className="flex flex-col gap-2 w-full text-left">
+                <div className="flex flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="font-display text-3xl md:text-[36px] leading-tight font-extrabold text-white mb-0.5 drop-shadow-md line-clamp-1">
+                      {activeMovie.title}
+                    </h2>
+                    <div
+                      className="glass-panel rounded-full px-3.5 py-1.5 flex items-center gap-1 backdrop-blur-md shrink-0 shadow-lg"
+                      style={{
+                        background: 'rgba(188, 150, 255, 0.15)',
+                        backdropFilter: 'blur(40px)',
+                        border: '1px solid rgba(188, 150, 255, 0.2)'
+                      }}
+                    >
+                      <Star className="w-3.5 h-3.5 fill-[#bc96ff] text-[#bc96ff]" />
+                      <span className="font-bold text-base text-white">
+                        {activeMovie.vote_average ? activeMovie.vote_average.toFixed(1) : 'N/A'}
+                      </span>
                     </div>
-                  )}
-
-                  {/* Rating indicator */}
-                  <div className="absolute top-3 right-3 bg-white/95 border border-[#F3F4F6] px-2 py-0.5 rounded-lg flex items-center gap-1 text-amber-500 font-black text-[11px] z-20 shadow-sm">
-                    <Star className="w-3 h-3 fill-current" />
-                    {activeMovie.vote_average.toFixed(1)}
                   </div>
 
-                  {/* Collapsible Info Glass Panel */}
-                  <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                    className={cn(
-                      "relative z-20 m-3 p-3.5 rounded-2xl",
-                      "bg-white/95 border border-neutral-200/70 shadow-[0_8px_30px_rgb(0,0,0,0.08)]",
-                      "flex flex-col justify-end overflow-hidden transition-all duration-300"
-                    )}
-                    style={{ maxHeight: isExpanded ? '280px' : '90px' }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0 pr-2 text-left">
-                        <h3 className="text-sm font-semibold text-[#0F0F10] truncate leading-snug">
-                          {activeMovie.title}
-                        </h3>
-                        <p className="text-[9px] text-neutral-500 flex items-center gap-1 mt-0.5 font-medium">
-                          <Calendar className="w-2.5 h-2.5 text-slate-500" />
-                          {activeMovie.release_date || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Expand Detail trigger button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsExpanded(!isExpanded);
-                      }}
-                      className="mt-1.5 py-0.5 w-full flex items-center justify-center text-neutral-500 hover:text-[#7C3AED] transition-colors cursor-pointer"
-                    >
-                      {isExpanded ? (
-                        <span className="text-[9px] font-bold flex items-center gap-1 uppercase tracking-wider">
-                          Ocultar descripción <ChevronDown className="w-3 h-3 text-slate-400" />
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-bold flex items-center gap-1 uppercase tracking-wider">
-                          Ver descripción <ChevronUp className="w-3 h-3 text-slate-400" />
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Collapsible details content */}
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="mt-2 overflow-y-auto no-scrollbar max-h-[140px] text-left border-t border-white/5 pt-1.5"
-                      >
-                        <p className="text-[11px] text-neutral-600 leading-relaxed font-normal">
-                          {activeMovie.overview || 'Sin descripción disponible.'}
-                        </p>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                </div>
-              </ContentCard>
-            </motion.div>
-          ) : (
-            /* Depleted Empty Deck State */
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-center p-6 flex flex-col items-center justify-center w-full max-w-[310px]"
-            >
-              <ContentCard className="p-8 flex flex-col items-center gap-5">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-500 to-amber-400 flex items-center justify-center shadow-lg animate-float">
-                  <Star className="w-7 h-7 text-slate-900 fill-current" />
-                </div>
-                <div className="space-y-1.5">
-                  <h2 className="text-lg font-bold text-[#1A1A1A]">¡Fin de la lista!</h2>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed max-w-[220px]">
-                    {loadError || 'Has visto todas las películas de esta página. Carga más recomendaciones.'}
+                  <p className="text-sm text-[#e4e1e7] font-medium">
+                    {activeMovie.release_date ? activeMovie.release_date.split('-')[0] : ''}
                   </p>
+
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    <p className={`text-xs text-white/80 leading-relaxed font-normal ${showOverview ? '' : 'line-clamp-2'}`}>
+                      {activeMovie.overview || 'Sin descripción disponible.'}
+                    </p>
+                    {activeMovie.overview && (
+                      <button
+                        type="button"
+                        onClick={() => setShowOverview(!showOverview)}
+                        className="text-[#bc96ff] font-mono text-[11px] font-semibold uppercase tracking-wider text-left flex items-center gap-0.5 mt-0.5 cursor-pointer hover:underline"
+                      >
+                        {showOverview ? (
+                          <>Ver menos <ChevronUp className="w-3 h-3" /></>
+                        ) : (
+                          <>Ver más <ChevronDown className="w-3 h-3" /></>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Cast / Reparto Section */}
+                  <MovieCast movieId={activeMovie.id} />
                 </div>
-                <button
-                  onClick={loadNextQueue}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-violet-700 transition-all text-xs font-bold text-white shadow-sm active:scale-95 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  {isLoading ? 'Cargando...' : 'Cargar más películas'}
-                </button>
-              </ContentCard>
+              </div>
+
+              {/* Interactive Rating Slider */}
+              <RatingSlider
+                value={rating}
+                onChange={(v) => setRating(v)}
+                onCommit={(v) => handleRatingSubmit(v)}
+                disabled={submitting}
+              />
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Floating Status Display */}
-      <div className="h-6 text-center text-[11px] text-neutral-500 font-bold tracking-wider uppercase mb-1">
-        {statusText ? (
-          <span className="px-3 py-1 rounded-full bg-[#FAFAFA] border border-[#F3F4F6] animate-pulse text-neutral-500">
-            {statusText}
-          </span>
-        ) : currentIndex < movies.length ? (
-          <span>Película {currentIndex + 1} de {movies.length}</span>
-        ) : null}
-      </div>
-
-      <div className="safe-pb">
-        <RatingSlider
-          value={rating}
-          onChange={setRating}
-          onCommit={submitRating}
-          disabled={isPending || isLoading || !activeMovie}
-        />
-        {isPending && <p className="mt-3 text-center text-xs font-semibold text-neutral-500">Guardando puntuación...</p>}
-      </div>
+          </AnimatePresence>
+        ) : (
+          /* Empty State with Retry Button */
+          <div className="flex flex-col items-center justify-center text-center p-8 my-auto bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-[#bc96ff]/20 text-[#bc96ff] flex items-center justify-center mb-4">
+              <Star className="w-8 h-8 fill-current" />
+            </div>
+            <h3 className="font-display text-xl font-bold text-white mb-2">No hay más películas disponibles por ahora</h3>
+            <p className="text-xs text-[#e4e1e7] mb-6 max-w-[260px] leading-relaxed">
+              Has calificado todas las películas disponibles en este momento.
+            </p>
+            <button
+              type="button"
+              onClick={() => void fetchMoreMovies(1)}
+              className="px-8 py-3 rounded-full text-white font-bold text-xs transition-all flex items-center gap-2 shadow-lg cursor-pointer active:scale-95"
+              style={{ backgroundColor: '#ff4365', boxShadow: '0 0 25px rgba(255, 67, 101, 0.6)' }}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Reintentar
+            </button>
+          </div>
+        )}
+      </main>
     </div>
   )
 }

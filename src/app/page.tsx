@@ -1,6 +1,5 @@
 import MovieDeck from '@/components/MovieDeck';
 
-// Ensure the page does not cache environment variables statically
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
@@ -13,7 +12,7 @@ export default async function Home({ searchParams }: PageProps) {
   const roomId = typeof roomParam === 'string' ? roomParam : undefined;
 
   return (
-    <main className="flex-1 flex flex-col justify-between h-full">
+    <main className="flex-1 flex flex-col justify-between h-full overflow-hidden bg-[#371f7d]">
       <MovieDeck roomId={roomId} />
     </main>
   );

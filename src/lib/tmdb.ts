@@ -7,6 +7,13 @@ export interface TMDBMovie {
   vote_average: number;
 }
 
+export interface TMDBCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
 interface TMDBMovieResponse {
   id: number;
   title: string;
@@ -27,10 +34,6 @@ function toMovie(movie: TMDBMovieResponse, imageBaseUrl: string): TMDBMovie {
   }
 }
 
-/**
- * Fetches popular and recent movies sorted by primary release date descending from TMDB.
- * Returns only the specified fields with localized Spanish metadata.
- */
 export async function getMoviesByReleaseDate(page: number): Promise<TMDBMovie[]> {
   const apiKey = process.env.TMDB_API_KEY;
   const imageBaseUrl = process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p/w500';
@@ -40,7 +43,6 @@ export async function getMoviesByReleaseDate(page: number): Promise<TMDBMovie[]>
     throw new Error('La clave API de TMDB no está configurada correctamente en las variables de entorno.');
   }
 
-  // Get current date to avoid future unreleased placeholders
   const today = new Date().toISOString().split('T')[0];
 
   const params = new URLSearchParams({
@@ -50,14 +52,14 @@ export async function getMoviesByReleaseDate(page: number): Promise<TMDBMovie[]>
     include_adult: 'false',
     page: String(page),
     'primary_release_date.lte': today,
-    'vote_count.gte': '5', // ensure we fetch movies with basic reviews/visibility
+    'vote_count.gte': '5',
   });
 
   const url = `https://api.themoviedb.org/3/discover/movie?${params.toString()}`;
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: 3600 }, // Cache the fetch for 1 hour
+      next: { revalidate: 3600 },
     });
 
     if (!res.ok) {
@@ -93,4 +95,27 @@ export async function getMoviesByIds(ids: number[]): Promise<TMDBMovie[]> {
   }))
 
   return movies.filter((movie): movie is TMDBMovie => movie !== null)
+}
+
+export async function getMovieCredits(movieId: number): Promise<TMDBCastMember[]> {
+  const apiKey = process.env.TMDB_API_KEY;
+  const imageBaseUrl = process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p/w185';
+  if (!apiKey) return [];
+
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${apiKey}&language=es-ES`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data: { cast?: Array<{ id: number; name: string; character: string; profile_path?: string | null }> } = await res.json();
+    return (data.cast || []).slice(0, 15).map((actor) => ({
+      id: actor.id,
+      name: actor.name,
+      character: actor.character || '',
+      profile_path: actor.profile_path ? `${imageBaseUrl}${actor.profile_path}` : null,
+    }));
+  } catch (error) {
+    console.error('Error fetching movie credits:', error);
+    return [];
+  }
 }

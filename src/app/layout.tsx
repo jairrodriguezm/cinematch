@@ -1,12 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import BottomNav from "@/components/BottomNav";
 import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-hanken",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const viewport: Viewport = {
@@ -15,21 +26,18 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" }
-  ]
+  themeColor: "#371f7d",
 };
 
 export const metadata: Metadata = {
-  title: "Movie Match — Películas en Match",
-  description: "Desliza y empareja películas con tu pareja o amigos al estilo iOS.",
-  applicationName: "Movie Match",
+  title: "CineMatch - Calificar",
+  description: "CineMatch - Califica películas en vivo",
+  applicationName: "CineMatch",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Movie Match",
+    title: "CineMatch",
   },
   formatDetection: {
     telephone: false,
@@ -42,14 +50,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full bg-white text-[#0F0F10] flex justify-center items-start p-0 m-0 overflow-x-hidden">
+    <html lang="es" className={`${inter.variable} ${hanken.variable} ${jetbrains.variable} dark h-full antialiased`}>
+      <body className="bg-[#371f7d] text-white h-screen max-h-screen overflow-hidden flex flex-col font-sans relative select-none p-0 m-0">
         <AuthProvider>
-          <div className="w-full max-w-md min-h-screen bg-white relative flex flex-col overflow-hidden">
+          <div className="w-full h-full relative flex flex-col overflow-hidden">
             {children}
           </div>
+          <BottomNav />
         </AuthProvider>
-
         <PWAInstallBanner />
       </body>
     </html>

@@ -1,15 +1,17 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
+
+export const dynamic = 'force-dynamic'
 
 function getSafeNext(value: string | null) {
   return value?.startsWith('/') && !value.startsWith('//') ? value : '/'
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isLoading } = useAuth()
@@ -71,42 +73,50 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center px-6 py-10">
-      <section className="w-full rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_12px_40px_rgba(15,15,16,0.06)]">
-        <p className="text-sm font-semibold text-[#7C3AED]">Movie Match</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#0F0F10]">Inicia sesión</h1>
-        <p className="mt-2 text-sm leading-6 text-neutral-500">Recibe un enlace seguro o continúa con tu cuenta de Google.</p>
+    <section className="w-full rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_12px_40px_rgba(15,15,16,0.06)]">
+      <p className="text-sm font-semibold text-[#7C3AED]">Movie Match</p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#0F0F10]">Inicia sesión</h1>
+      <p className="mt-2 text-sm leading-6 text-neutral-500">Recibe un enlace seguro o continúa con tu cuenta de Google.</p>
 
-        <form noValidate onSubmit={handleMagicLink} className="mt-6 space-y-3">
-          <label className="block text-sm font-medium text-[#0F0F10]">
-            Correo electrónico
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value)
-                setError(null)
-              }}
-              placeholder="tu@correo.com"
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? 'login-error' : undefined}
-              className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100 aria-[invalid=true]:border-red-400"
-            />
-          </label>
-          <button type="submit" disabled={pending !== null} className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60">
-            {pending === 'magic' ? 'Sending link...' : 'Send Magic Link'}
-          </button>
-        </form>
-
-        <div className="my-5 flex items-center gap-3 text-xs text-neutral-400"><span className="h-px flex-1 bg-neutral-200" />o<span className="h-px flex-1 bg-neutral-200" /></div>
-        <button type="button" onClick={handleGoogle} disabled={pending !== null} className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 px-4 py-3 text-sm font-semibold text-[#0F0F10] transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60">
-          <span aria-hidden="true" className="text-base font-bold text-[#4285F4]">G</span>
-          {pending === 'google' ? 'Authenticating...' : 'Continue with Google'}
+      <form noValidate onSubmit={handleMagicLink} className="mt-6 space-y-3">
+        <label className="block text-sm font-medium text-[#0F0F10]">
+          Correo electrónico
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => {
+              setEmail(event.target.value)
+              setError(null)
+            }}
+            placeholder="tu@correo.com"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'login-error' : undefined}
+            className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#7C3AED] focus:ring-4 focus:ring-violet-100 aria-[invalid=true]:border-red-400"
+          />
+        </label>
+        <button type="submit" disabled={pending !== null} className="w-full rounded-xl bg-[#7C3AED] px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60">
+          {pending === 'magic' ? 'Enviando enlace...' : 'Enviar enlace mágico'}
         </button>
+      </form>
 
-        {isSent && <p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm text-emerald-700">Check your inbox!</p>}
-        {error && <p id="login-error" role="alert" className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      </section>
+      <div className="my-5 flex items-center gap-3 text-xs text-neutral-400"><span className="h-px flex-1 bg-neutral-200" />o<span className="h-px flex-1 bg-neutral-200" /></div>
+      <button type="button" onClick={handleGoogle} disabled={pending !== null} className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 px-4 py-3 text-sm font-semibold text-[#0F0F10] transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60">
+        <span aria-hidden="true" className="text-base font-bold text-[#4285F4]">G</span>
+        {pending === 'google' ? 'Autenticando...' : 'Continuar con Google'}
+      </button>
+
+      {isSent && <p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm text-emerald-700">¡Revisa tu bandeja de entrada!</p>}
+      {error && <p id="login-error" role="alert" className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+    </section>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <main className="flex flex-1 items-center px-6 py-10">
+      <Suspense fallback={<div className="text-xs text-neutral-400">Cargando...</div>}>
+        <LoginForm />
+      </Suspense>
     </main>
   )
 }

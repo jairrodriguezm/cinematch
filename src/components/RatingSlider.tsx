@@ -1,5 +1,8 @@
 'use client'
 
+import React, { useState } from 'react'
+import { CheckCircle2 } from 'lucide-react'
+
 interface RatingSliderProps {
   value: number
   onChange: (rating: number) => void
@@ -7,42 +10,86 @@ interface RatingSliderProps {
   disabled?: boolean
 }
 
-function sliderColor(value: number) {
-  if (value <= 4) return '#A3A3A3'
-  if (value <= 7) return '#A78BFA'
-  return '#7C3AED'
-}
-
 export default function RatingSlider({ value, onChange, onCommit, disabled }: RatingSliderProps) {
-  const fill = ((value - 1) / 9) * 100
-  const color = sliderColor(value)
+  const [isDragging, setIsDragging] = useState(false)
+  const integerValue = Math.round(value)
+  const percentage = ((integerValue - 1) / 9) * 100
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-center">
-        <span className="rounded-full px-3 py-1.5 text-sm font-bold text-white" style={{ backgroundColor: color }}>
-          Score: {value} / 10
-        </span>
+    <div className="flex flex-col gap-2 w-full mt-2">
+      {/* Top Rating Badge */}
+      <div className="flex justify-center items-center">
+        <div
+          className="text-white font-semibold text-sm px-3.5 py-0.5 my-4 rounded-full flex items-center gap-1.5 shadow-md"
+          style={{
+            backgroundColor: '#bc96ff',
+            borderRadius: '1.5rem',
+            boxShadow: 'rgba(188, 150, 255, 0.4) 0px 0px 15px'
+          }}
+        >
+          Puntuación: <span className="font-extrabold">{integerValue}</span> / 10
+        </div>
       </div>
-      <input
-        type="range"
-        min="1"
-        max="10"
-        step="1"
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        onPointerUp={() => onCommit(value)}
-        onKeyUp={(event) => {
-          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Home' || event.key === 'End') onCommit(value)
-        }}
-        aria-label="Puntuación de la película"
-        className="h-3 w-full cursor-pointer appearance-none rounded-full disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-slider-thumb]:size-7 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#7C3AED] [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#7C3AED] [&::-moz-range-thumb]:shadow-md"
-        style={{ background: `linear-gradient(to right, ${color} 0%, ${color} ${fill}%, #E5E7EB ${fill}%, #E5E7EB 100%)` }}
-      />
-      <div className="flex justify-between text-[10px] font-semibold text-neutral-500">
-        <span>1 (No me interesa)</span>
-        <span>10 (¡Must watch!)</span>
+
+      {/* Slider & Progress Bar */}
+      <div className="w-full relative py-2 my-0.5">
+        <input
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          value={integerValue}
+          disabled={disabled}
+          onChange={(e) => onChange(Number(e.target.value))}
+          onMouseDown={() => setIsDragging(true)}
+          onMouseUp={() => setIsDragging(false)}
+          onTouchStart={() => setIsDragging(true)}
+          onTouchEnd={() => setIsDragging(false)}
+          aria-label="Puntuación de la película"
+          className="w-full h-2 rounded-full appearance-none bg-white/10 outline-none relative z-10 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ boxShadow: '0 0 15px rgba(188, 150, 255, 0.5)' }}
+        />
+
+        {/* Visual progress bar overlay */}
+        <div
+          className="absolute top-[18px] left-0 h-[8px] rounded-l-full pointer-events-none z-20"
+          style={{
+            width: `${percentage}%`,
+            backgroundColor: '#bc96ff',
+            boxShadow: '0 0 12px rgba(188, 150, 255, 0.7)'
+          }}
+        />
+
+        {/* Floating Tooltip */}
+        <div
+          className="absolute top-[-10px] -translate-x-1/2 text-white font-mono text-[11px] px-2 py-0.5 rounded-md transition-opacity duration-200 pointer-events-none z-30 font-bold"
+          style={{
+            backgroundColor: '#bc96ff',
+            left: `calc(${percentage}% + ${10 - percentage * 0.2}px)`,
+            opacity: isDragging ? 1 : 0.85,
+            boxShadow: '0 0 12px rgba(188, 150, 255, 0.8)'
+          }}
+        >
+          {integerValue}
+        </div>
+      </div>
+
+      {/* Confirm Action Button */}
+      <div className="flex justify-center mt-1">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onCommit(integerValue)}
+          className="text-white font-bold text-base px-6 py-3 rounded-full w-full max-w-[280px] hover:opacity-90 transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+          style={{
+            backgroundColor: '#ff4365',
+            color: 'white',
+            boxShadow: '0 0 25px rgba(255, 67, 101, 0.7)',
+          }}
+        >
+          Confirmar Calificación
+          <CheckCircle2 className="w-5 h-5" />
+        </button>
       </div>
     </div>
   )
