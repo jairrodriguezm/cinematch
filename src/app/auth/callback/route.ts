@@ -9,7 +9,8 @@ function getSafeNext(value: string | null) {
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
   const next = getSafeNext(request.nextUrl.searchParams.get('next'))
-  const response = NextResponse.redirect(new URL(next, request.url))
+  const origin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin || 'https://cinematch-five-mu.vercel.app'
+  const response = NextResponse.redirect(new URL(next, origin))
 
   if (!code) return response
 

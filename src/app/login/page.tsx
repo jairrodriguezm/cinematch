@@ -26,7 +26,8 @@ function LoginForm() {
   }, [isLoading, next, router, user])
 
   const callbackUrl = () => {
-    const url = new URL('/auth/callback', window.location.origin)
+    const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'https://cinematch-five-mu.vercel.app')
+    const url = new URL('/auth/callback', origin)
     url.searchParams.set('next', next)
     return url.toString()
   }

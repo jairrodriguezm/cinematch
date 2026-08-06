@@ -9,7 +9,8 @@ interface ShareRoomButtonProps {
 
 export default function ShareRoomButton({ token, roomName }: ShareRoomButtonProps) {
   const shareRoom = async () => {
-    const url = `${window.location.origin}/rooms/join?token=${encodeURIComponent(token)}`
+    const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'https://cinematch-five-mu.vercel.app')
+    const url = `${origin}/rooms/join?token=${encodeURIComponent(token)}`
     const shareData = {
       title: `Sala ${roomName}`,
       text: `Únete a mi sala de Movie Match: ${roomName}`,
