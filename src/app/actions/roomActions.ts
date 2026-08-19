@@ -32,22 +32,22 @@ async function getAuthenticatedUser(supabase: Awaited<ReturnType<typeof createCl
 /**
  * Action: Create a new matchmaking room.
  */
-export async function createRoom(name: string, invitedEmail: string) {
+export async function createRoom(roomName: string) {
   try {
     const supabase = await createClient();
     const user = await getAuthenticatedUser(supabase);
 
     if (!user) return { success: false, error: 'Debes iniciar sesión para crear una sala.' };
 
-    if (!name || !invitedEmail) {
+    if (!roomName) {
       return { success: false, error: 'Por favor complete todos los campos requeridos.' };
     }
 
     const { data: newRoom, error } = await supabase
       .from('rooms')
       .insert({
-        name,
-        invited_email: invitedEmail.trim().toLowerCase(),
+        name: roomName,
+        invited_email: '',
         invite_token: crypto.randomUUID(),
         created_by: user.id,
         invited_user_id: null // Will map when the guest joins/claims it
@@ -70,9 +70,9 @@ export async function createRoom(name: string, invitedEmail: string) {
   }
 }
 
-export async function joinRoomByToken(token: string) {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
-    return { success: false, error: 'Invitación inválida.' };
+export async function joinRoom(roomCode: string) {
+  if (!roomCode) {
+    return { success: false, error: 'Código inválido.' };
   }
 
   try {
@@ -86,7 +86,7 @@ export async function joinRoomByToken(token: string) {
     const { data: room, error: roomError } = await supabase
       .from('rooms')
       .select('id, invited_user_id')
-      .eq('invite_token', token)
+      .eq('invite_token', roomCode)
       .single();
 
     if (roomError || !room) {
@@ -215,5 +215,85 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
   } catch (err) {
     console.error('Exception fetching rooms with matches:', err);
     return [];
+  }
+}
+
+export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | null> {
+  try {
+    const supabase = await createClient();
+    const user = await getAuthenticatedUser(supabase);
+    if (!user) return null;
+
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single();
+
+    if (roomError || !room) {
+      return null;
+    }
+
+    const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
+    if (memberIds.length < 2) {
+      return { ...room, matches: [] };
+    }
+
+    const { data: interactions, error: interactionsError } = await supabase
+      .from('user_interactions')
+      .select('*')
+      .in('user_id', memberIds);
+
+    if (interactionsError || !interactions) {
+      return { ...room, matches: [] };
+    }
+
+    const movieInteractionsMap: { [key: number]: typeof interactions } = {};
+    interactions.forEach(interaction => {
+      if (!movieInteractionsMap[interaction.movie_id]) {
+        movieInteractionsMap[interaction.movie_id] = [];
+      }
+      const alreadyExists = movieInteractionsMap[interaction.movie_id].some(
+        existing => existing.user_id === interaction.user_id
+      );
+      if (!alreadyExists) {
+        movieInteractionsMap[interaction.movie_id].push(interaction);
+      }
+    });
+
+    const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
+
+    Object.entries(movieInteractionsMap).forEach(([movieIdStr, votes]) => {
+      const movieId = parseInt(movieIdStr);
+      const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
+
+      const participantRatings = memberIds.map(id => ratingsByUser.get(id) ?? 0);
+      if (participantRatings.every(rating => rating >= 7)) {
+        matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
+      }
+    });
+
+    if (matchedMovieIds.length === 0) {
+      return { ...room, matches: [] };
+    }
+
+    const movieIds = matchedMovieIds.map(m => m.movieId);
+    const moviesData = await getMoviesByIds(movieIds);
+
+    const matches: MatchedMovie[] = moviesData.map(movie => {
+      const matchInfo = matchedMovieIds.find(m => m.movieId === movie.id);
+      return {
+        ...movie,
+        matchType: matchInfo?.matchType || 'SECONDARY'
+      };
+    });
+
+    return {
+      ...room,
+      matches
+    };
+  } catch (err) {
+    console.error('Exception in getRoomMatches:', err);
+    return null;
   }
 }
