@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <h1>🎬 CineMatch</h1>
+  <p><strong>A Next.js Application for Live Movie Rating and Discovery</strong></p>
+</div>
 
-## Getting Started
+CineMatch is a modern, responsive web application that lets users discover and rate movies in real-time. Built with a focus on performance, user experience, and modern web development practices, it features seamless animations, Progressive Web App (PWA) capabilities, and a robust backend.
 
-First, run the development server:
+## ✨ Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Live Movie Rating Deck:** A visually engaging, swipeable deck interface for rating movies, complete with fluid animations.
+- **TMDB Integration:** Real-time fetching of comprehensive movie data, cast, and watch providers from The Movie Database (TMDB).
+- **Modern UI/UX:** Features a sleek dark mode design with neon glow accents (`#bc96ff` and `#ff4365`), rounded pill buttons, and glassmorphic elements.
+- **Progressive Web App (PWA):** Installable on mobile and desktop devices for a native-like experience.
+- **Real-time Backend:** Powered by Supabase for secure authentication, database management, and real-time interactions.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+CineMatch is built using a modern, scalable technology stack:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework:** [Next.js (App Router)](https://nextjs.org/) - Utilizing Server Components and Server Actions for optimal performance.
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework for rapid UI development.
+- **Animations:** [Framer Motion](https://www.framer.com/motion/) - For complex, physics-based UI animations.
+- **Icons:** [Lucide React](https://lucide.dev/) - Beautiful, consistent icon set.
+- **Backend as a Service:** [Supabase](https://supabase.com/) - PostgreSQL database, Authentication, and Edge Functions.
+- **External API:** [TMDB API](https://developer.themoviedb.org/docs) - For rich movie metadata.
+- **PWA Capabilities:** `@ducanh2912/next-pwa` - For seamless offline and installable web app support.
 
-## Learn More
+## 🚀 Getting Started
 
-To learn more about Next.js, take a look at the following resources:
+Follow these instructions to set up the project locally.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prerequisites
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Node.js 18.x or later
+- npm, pnpm, or yarn
 
-## Deploy on Vercel
+### Installation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/cinematch.git
+   cd cinematch
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. **Environment Variables:**
+   Create a `.env.local` file in the root directory and add the following required environment variables:
+   ```env
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+   # TMDB Configuration
+   TMDB_API_KEY=your_tmdb_api_key
+   # or
+   TMDB_ACCESS_TOKEN=your_tmdb_read_access_token
+   ```
+
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the application running.
+
+## 🏗 Architecture & Design Decisions
+
+- **App Router & Server Components:** By leveraging Next.js App Router, the application minimizes client-side JavaScript, improving load times and SEO. Data fetching is optimized on the server side.
+- **Component-Driven Design:** The UI is broken down into reusable, highly cohesive components (`MovieDeck`, `RatingSlider`, `MovieCast`) for maintainability.
+- **Responsive & Accessible:** Designed mobile-first, ensuring a seamless experience across all device sizes. Attention is paid to interactive elements and visual hierarchy.
+
+## 📝 License
+
+This project is open-source and available under the [MIT License](LICENSE).
