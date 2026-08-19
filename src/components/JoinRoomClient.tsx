@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { joinRoomByToken } from '@/app/actions/roomActions'
+import { joinRoom } from '@/app/actions/roomActions'
 import { createClient } from '@/lib/supabase/client'
 
 interface JoinRoomClientProps {
@@ -24,7 +24,7 @@ export default function JoinRoomClient({ token }: JoinRoomClientProps) {
         return
       }
 
-      const result = await joinRoomByToken(token)
+      const result = await joinRoom(token)
       if (!result.success || !result.roomId) {
         setError(result.error || 'No fue posible unirte a la sala.')
         return

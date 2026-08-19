@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Mail, Users, ArrowLeft, Film } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { createRoom, fetchRoomsWithMatches, RoomWithMatches } from '@/app/actions/roomActions'
+import { createRoom, joinRoom, fetchRoomsWithMatches, RoomWithMatches } from '@/app/actions/roomActions'
 import ContentCard from './ContentCard'
 import ShareRoomButton from './ShareRoomButton'
 
@@ -16,8 +16,9 @@ interface RoomsDashboardProps {
 export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const [rooms, setRooms] = useState<RoomWithMatches[]>(initialRooms);
   const [roomName, setRoomName] = useState('');
-  const [invitedEmail, setInvitedEmail] = useState('');
+  const [roomCode, setRoomCode] = useState('');
   const [formStatus, setFormStatus] = useState<{ success: boolean; message: string } | null>(null);
+  const [joinStatus, setJoinStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   async function triggerRefresh() {
@@ -53,20 +54,39 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
     e.preventDefault();
     setFormStatus(null);
 
-    if (!roomName.trim() || !invitedEmail.trim()) {
+    if (!roomName.trim()) {
       setFormStatus({ success: false, message: 'Por favor, rellena todos los campos.' });
       return;
     }
 
-    const response = await createRoom(roomName, invitedEmail);
+    const response = await createRoom(roomName);
     
     if (response.success) {
       setFormStatus({ success: true, message: '¡Sala creada exitosamente!' });
       setRoomName('');
-      setInvitedEmail('');
       triggerRefresh();
     } else {
       setFormStatus({ success: false, message: response.error || 'Error al crear la sala.' });
+    }
+  };
+
+  const handleJoinRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setJoinStatus(null);
+
+    if (!roomCode.trim()) {
+      setJoinStatus({ success: false, message: 'Por favor, ingresa el código.' });
+      return;
+    }
+
+    const response = await joinRoom(roomCode.trim());
+
+    if (response.success) {
+      setJoinStatus({ success: true, message: '¡Te has unido a la sala exitosamente!' });
+      setRoomCode('');
+      triggerRefresh();
+    } else {
+      setJoinStatus({ success: false, message: response.error || 'Error al unirse a la sala.' });
     }
   };
 
@@ -90,64 +110,100 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
         MIS SALAS DE MATCH
       </h1>
 
-      {/* Create room form */}
-      <ContentCard className="p-5 mb-6 text-left">
-        <h2 className="text-sm font-semibold text-[#0F0F10] uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-[#f5c518]" />
-          Crear Nueva Sala de Match
-        </h2>
-        
-        <form onSubmit={handleCreateRoom} className="space-y-3.5">
-          <div>
-            <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
-              Nombre de la Sala
-            </label>
-            <input
-              type="text"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              placeholder="Ej. Cine de Fin de Semana"
-              className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-xl text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#f5c518] focus:ring-2 focus:ring-amber-100"
-            />
-          </div>
+      {/* Forms Section */}
+      <div className="grid gap-6 mb-6">
+        {/* Create room form */}
+        <ContentCard className="p-5 text-left">
+          <h2 className="text-sm font-semibold text-[#0F0F10] uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Plus className="w-4 h-4 text-[#bc96ff]" />
+            Crear Nueva Sala
+          </h2>
 
-          <div>
-            <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
-              Correo de tu Acompañante
-            </label>
-            <input
-              type="email"
-              value={invitedEmail}
-              onChange={(e) => setInvitedEmail(e.target.value)}
-              placeholder="Ej. mi_pareja@gmail.com"
-              className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-xl text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#f5c518] focus:ring-2 focus:ring-amber-100"
-            />
-          </div>
+          <form onSubmit={handleCreateRoom} className="space-y-3.5">
+            <div>
+              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
+                Nombre de la Sala
+              </label>
+              <input
+                type="text"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                placeholder="Ej. Cine de Fin de Semana"
+                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all"
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full py-2.5 rounded-xl bg-[#f5c518] hover:bg-amber-400 active:scale-[0.98] text-black text-xs font-extrabold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            Crear Sala
-          </button>
-        </form>
-
-        <AnimatePresence>
-          {formStatus && (
-            <motion.p
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className={`text-xs font-bold mt-3 text-center ${
-                formStatus.success ? 'text-emerald-400' : 'text-red-400'
-              }`}
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2"
             >
-              {formStatus.message}
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </ContentCard>
+              <Users className="w-4 h-4" />
+              Crear Sala
+            </button>
+          </form>
+
+          <AnimatePresence>
+            {formStatus && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={`text-xs font-bold mt-3 text-center ${
+                  formStatus.success ? 'text-emerald-400' : 'text-red-400'
+                }`}
+              >
+                {formStatus.message}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </ContentCard>
+
+        {/* Join room form */}
+        <ContentCard className="p-5 text-left">
+          <h2 className="text-sm font-semibold text-[#0F0F10] uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4 text-[#ff4365]" />
+            Unirse con Código
+          </h2>
+
+          <form onSubmit={handleJoinRoom} className="space-y-3.5">
+            <div>
+              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
+                Código de la Sala
+              </label>
+              <input
+                type="text"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value)}
+                placeholder="Pega el código aquí"
+                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Unirse
+            </button>
+          </form>
+
+          <AnimatePresence>
+            {joinStatus && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={`text-xs font-bold mt-3 text-center ${
+                  joinStatus.success ? 'text-emerald-400' : 'text-red-400'
+                }`}
+              >
+                {joinStatus.message}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </ContentCard>
+      </div>
 
       {/* Match Rooms List */}
       <div className="flex-1 flex flex-col">
@@ -166,27 +222,25 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 rounded-full blur-2xl pointer-events-none" />
                 )}
 
-                <div className="flex justify-between items-start border-b border-[#F3F4F6] pb-3 mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-[#0F0F10] leading-snug">
-                      {room.name}
-                    </h3>
-                    <p className="text-[10px] text-neutral-500 flex items-center gap-1.5 mt-0.5">
-                      <Mail className="w-3 h-3 text-neutral-400" />
-                      Invitado: {room.invited_email}
-                    </p>
+                <Link href={`/rooms/${room.id}`} className="block">
+                  <div className="flex justify-between items-start border-b border-[#F3F4F6] pb-3 mb-3 cursor-pointer hover:bg-gray-50/50 rounded-t-xl transition-colors p-2 -mx-2 -mt-2">
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#0F0F10] leading-snug">
+                        {room.name}
+                      </h3>
+                      <p className="text-[10px] text-neutral-500 flex items-center gap-1.5 mt-0.5">
+                        <Users className="w-3 h-3 text-neutral-400" />
+                        Ver Detalles
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[9px] font-black text-white bg-gradient-to-r from-[#bc96ff] to-[#ff4365] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                        Entrar
+                      </span>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2 shrink-0">
-                    <ShareRoomButton token={room.invite_token} roomName={room.name} />
-                    <Link
-                      href={`/?room=${room.id}`}
-                      className="text-[9px] font-black text-black border border-amber-300 bg-[#f5c518] px-2.5 py-1 rounded-full uppercase tracking-wider hover:bg-amber-400 active:scale-95"
-                    >
-                      Entrar a votar
-                    </Link>
-                  </div>
-                </div>
+                </Link>
 
                 {/* Matches Grid inside Room */}
                 <div>
