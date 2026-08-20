@@ -19,7 +19,6 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   const [nextPage, setNextPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [rating, setRating] = useState<number>(7)
   const [isExpanded, setIsExpanded] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [providers, setProviders] = useState<TMDBWatchProvider[]>([])
@@ -28,15 +27,9 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   const activeMovie = queue[0] ?? null
 
   useEffect(() => {
-    if (activeMovie && activeMovie.vote_average !== undefined) {
-      const nearestInt = Math.max(1, Math.min(10, Math.round(activeMovie.vote_average)))
-      setRating(nearestInt)
-    }
-  }, [activeMovie?.id, activeMovie?.vote_average])
-
-  useEffect(() => {
     let isMounted = true
     if (activeMovie?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingProviders(true)
       setProviders([])
       void fetchWatchProviders(activeMovie.id).then((res) => {
@@ -76,6 +69,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchMoreMovies(1)
   }, [fetchMoreMovies])
 
@@ -279,8 +273,8 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
 
               {/* Original Interactive Rating Slider with Updated Styling */}
               <RatingSlider
-                value={rating}
-                onChange={(v) => setRating(v)}
+                key={activeMovie.id}
+                initialValue={activeMovie.vote_average ? Math.max(1, Math.min(10, Math.round(activeMovie.vote_average))) : 7}
                 onCommit={(v) => handleRatingSubmit(v)}
                 disabled={submitting}
               />

@@ -14,6 +14,7 @@ export default function MovieCast({ movieId }: MovieCastProps) {
 
   useEffect(() => {
     let isMounted = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setCast([])
     void fetchMovieCast(movieId).then((members) => {

@@ -1,0 +1,3 @@
+## 2024-05-30 - Prevent full component re-render on user interaction in forms/sliders
+**Learning:** React state changes in a parent component triggered by high-frequency interactions in a child component (like a slider drag `onChange`) will cause the entire parent tree to re-render. In `MovieDeck.tsx`, dragging `RatingSlider` was causing full re-renders of the background, movie cast, and text sections because `rating` was kept in `MovieDeck`'s state.
+**Action:** Move volatile interactive state down into the leaf component (e.g., `RatingSlider`). If the parent needs the final value, use an `onCommit` callback for when the interaction completes. Pass the initial value down as a prop if necessary.
