@@ -138,27 +138,49 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
 
     const roomsWithMatches: RoomWithMatches[] = [];
 
+    // ⚡ Bolt Optimization: Batching user interactions and TMDB queries
+    // What: Gather all unique member IDs and fetch interactions in one query, then fetch all unique matched movies in one TMDB call.
+    // Why: Prevents the N+1 query problem where each room triggers a separate DB query and API call.
+    // Impact: Changes O(N) database and API operations to O(1), dramatically improving dashboard load time and realtime sync speed.
+
+    // 1. Gather all unique member IDs across all rooms
+    const allMemberIds = new Set<string>();
+    rooms.forEach(room => {
+      if (room.created_by) allMemberIds.add(room.created_by);
+      if (room.invited_user_id) allMemberIds.add(room.invited_user_id);
+    });
+
+    const uniqueMemberIds = Array.from(allMemberIds);
+    let allInteractions: { user_id: string | null, movie_id: number, rating: number, [key: string]: any }[] = [];
+
+    if (uniqueMemberIds.length > 0) {
+      // 2. Fetch all interactions in a single query
+      const { data: interactionsData, error: interactionsError } = await supabase
+        .from('user_interactions')
+        .select('*')
+        .in('user_id', uniqueMemberIds);
+
+      if (!interactionsError && interactionsData) {
+        allInteractions = interactionsData;
+      }
+    }
+
+    // 3. Pre-calculate matched movies for each room
+    const roomMatchesMap = new Map<string, { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[]>();
+    const allMatchedMovieIds = new Set<number>();
+
     for (const room of rooms) {
       const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
       if (memberIds.length < 2) {
-        roomsWithMatches.push({ ...room, matches: [] });
+        roomMatchesMap.set(room.id, []);
         continue;
       }
 
-      // Ratings are user-owned, not room-owned. A room only determines its two members.
-      const { data: interactions, error: interactionsError } = await supabase
-        .from('user_interactions')
-        .select('*')
-        .in('user_id', memberIds);
-
-      if (interactionsError || !interactions) {
-        roomsWithMatches.push({ ...room, matches: [] });
-        continue;
-      }
+      const roomInteractions = allInteractions.filter(i => i.user_id !== null && memberIds.includes(i.user_id));
 
       // Group interactions by movie_id
-      const movieInteractionsMap: { [key: number]: typeof interactions } = {};
-      interactions.forEach(interaction => {
+      const movieInteractionsMap: { [key: number]: typeof roomInteractions } = {};
+      roomInteractions.forEach(interaction => {
         if (!movieInteractionsMap[interaction.movie_id]) {
           movieInteractionsMap[interaction.movie_id] = [];
         }
@@ -178,26 +200,35 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
         const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
         if (memberIds.every((userId) => (ratingsByUser.get(userId) ?? 0) >= 7)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
+          allMatchedMovieIds.add(movieId);
         }
       });
 
+      roomMatchesMap.set(room.id, matchedMovieIds);
+    }
+
+    // 4. Fetch all matched movies from TMDB in a single batched call
+    let globalMoviesData: Awaited<ReturnType<typeof getMoviesByIds>> = [];
+    if (allMatchedMovieIds.size > 0) {
+      try {
+        globalMoviesData = await getMoviesByIds(Array.from(allMatchedMovieIds));
+      } catch (e) {
+        console.error('Error fetching batched movies from TMDB:', e);
+      }
+    }
+
+    // 5. Distribute matches back to rooms
+    for (const room of rooms) {
+      const matchedMovieIds = roomMatchesMap.get(room.id) || [];
       if (matchedMovieIds.length === 0) {
         roomsWithMatches.push({ ...room, matches: [] });
         continue;
       }
 
-      // Match metadata comes directly from TMDB, never from a Supabase movie catalog.
       const movieIds = matchedMovieIds.map(m => m.movieId);
-      let moviesData: Awaited<ReturnType<typeof getMoviesByIds>>;
-      try {
-        moviesData = await getMoviesByIds(movieIds);
-      } catch {
-        roomsWithMatches.push({ ...room, matches: [] });
-        continue;
-      }
+      const roomMoviesData = globalMoviesData.filter(movie => movieIds.includes(movie.id));
 
-      // Map matching type back to movies details
-      const matches: MatchedMovie[] = moviesData.map(movie => {
+      const matches: MatchedMovie[] = roomMoviesData.map(movie => {
         const matchInfo = matchedMovieIds.find(m => m.movieId === movie.id);
         return {
           ...movie,
