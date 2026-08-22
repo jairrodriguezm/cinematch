@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, memo } from 'react'
 import { fetchMovieCast } from '@/app/actions/movieActions'
 import { type TMDBCastMember } from '@/lib/tmdb'
 
@@ -8,7 +8,11 @@ interface MovieCastProps {
   movieId: number
 }
 
-export default function MovieCast({ movieId }: MovieCastProps) {
+/**
+ * ⚡ Bolt Optimization: Wrapped MovieCast in React.memo to prevent unnecessary
+ * re-renders when the parent MovieDeck updates its state (like dragging the rating slider).
+ */
+const MovieCast = memo(function MovieCast({ movieId }: MovieCastProps) {
   const [cast, setCast] = useState<TMDBCastMember[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
@@ -66,4 +70,6 @@ export default function MovieCast({ movieId }: MovieCastProps) {
       </div>
     </div>
   )
-}
+})
+
+export default MovieCast
