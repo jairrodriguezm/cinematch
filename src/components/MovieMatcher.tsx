@@ -227,6 +227,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
           disabled={currentIndex >= movies.length || isPending}
           className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 active:scale-90 border border-red-500/30 flex items-center justify-center text-red-400 transition-all shadow-lg hover:shadow-red-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer"
           title="Descartar"
+          aria-label="Descartar"
         >
           <X className="w-6 h-6 stroke-[2.5]" />
         </button>
@@ -236,6 +237,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
           disabled={currentIndex >= movies.length || isPending}
           className="w-12 h-12 rounded-full bg-amber-500/10 hover:bg-amber-500/20 active:scale-90 border border-amber-500/30 flex items-center justify-center text-amber-400 transition-all shadow-md hover:shadow-amber-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer"
           title="Tal Vez"
+          aria-label="Tal Vez"
         >
           <HelpCircle className="w-5.5 h-5.5 stroke-[2.5]" />
         </button>
@@ -245,6 +247,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
           disabled={currentIndex >= movies.length || isPending}
           className="w-14 h-14 rounded-full bg-blue-500/10 hover:bg-blue-500/20 active:scale-90 border border-blue-500/30 flex items-center justify-center text-blue-400 transition-all shadow-lg hover:shadow-blue-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer"
           title="Me Gusta"
+          aria-label="Me Gusta"
         >
           <Heart className="w-6 h-6 stroke-[2.5]" />
         </button>
