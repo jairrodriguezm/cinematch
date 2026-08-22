@@ -4,13 +4,13 @@ import React, { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 
 interface RatingSliderProps {
-  value: number
-  onChange: (rating: number) => void
+  initialValue: number
   onCommit: (rating: number) => void
   disabled?: boolean
 }
 
-export default function RatingSlider({ value, onChange, onCommit, disabled }: RatingSliderProps) {
+export default function RatingSlider({ initialValue, onCommit, disabled }: RatingSliderProps) {
+  const [value, setValue] = useState(initialValue)
   const [isDragging, setIsDragging] = useState(false)
   const integerValue = Math.round(value)
   const percentage = ((integerValue - 1) / 9) * 100
@@ -33,7 +33,7 @@ export default function RatingSlider({ value, onChange, onCommit, disabled }: Ra
           step="1"
           value={integerValue}
           disabled={disabled}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) => setValue(Number(e.target.value))}
           onMouseDown={() => setIsDragging(true)}
           onMouseUp={() => setIsDragging(false)}
           onTouchStart={() => setIsDragging(true)}
