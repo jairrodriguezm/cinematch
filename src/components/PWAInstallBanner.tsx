@@ -64,6 +64,7 @@ export default function PWAInstallBanner() {
 
             <button
               onClick={() => setVisible(false)}
+              aria-label="Cerrar banner de instalación"
               className="shrink-0 p-1.5 rounded-xl text-neutral-400 hover:text-[#1A1A1A] transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />

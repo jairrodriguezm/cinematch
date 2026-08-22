@@ -1,3 +1,9 @@
 ## 2024-05-30 - Prevent full component re-render on user interaction in forms/sliders
 **Learning:** React state changes in a parent component triggered by high-frequency interactions in a child component (like a slider drag `onChange`) will cause the entire parent tree to re-render. In `MovieDeck.tsx`, dragging `RatingSlider` was causing full re-renders of the background, movie cast, and text sections because `rating` was kept in `MovieDeck`'s state.
 **Action:** Move volatile interactive state down into the leaf component (e.g., `RatingSlider`). If the parent needs the final value, use an `onCommit` callback for when the interaction completes. Pass the initial value down as a prop if necessary.
+## 2024-03-24 - Supabase Data Fetching Optimization
+**Learning:** In applications using Supabase + React with real-time subscriptions, making DB queries in a loop (N+1 query problem) not only slows down the initial load but severely degrades performance on every realtime event, as the entire loop runs again.
+**Action:** Always extract unique identifiers, batch DB queries using , and distribute the results locally rather than querying in loops.
+## 2024-03-24 - Supabase Data Fetching Optimization
+**Learning:** In applications using Supabase + React with real-time subscriptions, making DB queries in a loop (N+1 query problem) not only slows down the initial load but severely degrades performance on every realtime event, as the entire loop runs again.
+**Action:** Always extract unique identifiers, batch DB queries using `.in('column', ids)`, and distribute the results locally rather than querying in loops.
