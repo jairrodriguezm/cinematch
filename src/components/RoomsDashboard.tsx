@@ -20,6 +20,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const [formStatus, setFormStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [joinStatus, setJoinStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   async function triggerRefresh() {
     setIsRefreshing(true);
@@ -59,7 +61,9 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       return;
     }
 
+    setIsCreating(true);
     const response = await createRoom(roomName);
+    setIsCreating(false);
     
     if (response.success) {
       setFormStatus({ success: true, message: '¡Sala creada exitosamente!' });
@@ -79,7 +83,9 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       return;
     }
 
+    setIsJoining(true);
     const response = await joinRoom(roomCode.trim());
+    setIsJoining(false);
 
     if (response.success) {
       setJoinStatus({ success: true, message: '¡Te has unido a la sala exitosamente!' });
@@ -135,10 +141,20 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2"
+              disabled={isCreating}
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Users className="w-4 h-4" />
-              Crear Sala
+              {isCreating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creando...
+                </>
+              ) : (
+                <>
+                  <Users className="w-4 h-4" />
+                  Crear Sala
+                </>
+              )}
             </button>
           </form>
 
@@ -181,10 +197,20 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2"
+              disabled={isJoining}
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Plus className="w-4 h-4" />
-              Unirse
+              {isJoining ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Uniéndose...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Unirse
+                </>
+              )}
             </button>
           </form>
 
