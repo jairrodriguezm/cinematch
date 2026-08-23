@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Mail, Users, ArrowLeft, Film } from 'lucide-react'
 import Link from 'next/link'
@@ -20,13 +20,18 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const [formStatus, setFormStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [joinStatus, setJoinStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const roomsRef = useRef(rooms);
 
-  async function triggerRefresh() {
+  useEffect(() => {
+    roomsRef.current = rooms;
+  }, [rooms]);
+
+  const triggerRefresh = useCallback(async () => {
     setIsRefreshing(true);
     const updatedRooms = await fetchRoomsWithMatches();
     setRooms(updatedRooms);
     setIsRefreshing(false);
-  }
+  }, []);
 
   // Sync rooms in real-time using Supabase Realtime subscriptions
   useEffect(() => {
@@ -38,9 +43,21 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_interactions' },
-        async (payload) => {
-          console.log('Realtime update detected in interactions:', payload);
-          triggerRefresh();
+        (payload) => {
+          // ⚡ Bolt Optimization: Real-time filtering
+          // Check if the interaction event is relevant to the user's current rooms
+          const currentRooms = roomsRef.current;
+          const relevantMembers = new Set<string>();
+          currentRooms.forEach(room => {
+            if (room.created_by) relevantMembers.add(room.created_by);
+            if (room.invited_user_id) relevantMembers.add(room.invited_user_id);
+          });
+
+          // Only trigger refresh if the interacting user is part of our rooms
+          if (payload.new && 'user_id' in payload.new && typeof payload.new.user_id === 'string' && relevantMembers.has(payload.new.user_id)) {
+            console.log('Relevant realtime update detected in interactions:', payload);
+            void triggerRefresh();
+          }
         }
       )
       .subscribe();
@@ -48,7 +65,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [triggerRefresh]);
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,6 +277,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                               <img
                                 src={movie.poster_path}
                                 alt={movie.title}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover select-none pointer-events-none"
                               />
                             ) : (

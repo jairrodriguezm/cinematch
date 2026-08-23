@@ -109,6 +109,8 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
                       <img
                         src={movie.poster_path}
                         alt={movie.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover select-none pointer-events-none"
                       />
                     ) : (

@@ -151,7 +151,7 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     });
 
     const uniqueMemberIds = Array.from(allMemberIds);
-    let allInteractions: { user_id: string | null, movie_id: number, rating: number, [key: string]: any }[] = [];
+    let allInteractions: { user_id: string | null, movie_id: number, rating: number, [key: string]: unknown }[] = [];
 
     if (uniqueMemberIds.length > 0) {
       // 2. Fetch all interactions in a single query
