@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Mail, Users, ArrowLeft, Film } from 'lucide-react'
 import Link from 'next/link'
@@ -28,6 +28,13 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
     setIsRefreshing(false);
   }
 
+  // Ref to keep track of relevant user ids without re-subscribing
+  const relevantUserIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    relevantUserIdsRef.current = new Set(rooms.flatMap(r => [r.created_by, r.invited_user_id].filter((id): id is string => Boolean(id))));
+  }, [rooms]);
+
   // Sync rooms in real-time using Supabase Realtime subscriptions
   useEffect(() => {
     const supabase = createClient();
@@ -39,8 +46,15 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_interactions' },
         async (payload) => {
-          console.log('Realtime update detected in interactions:', payload);
-          triggerRefresh();
+          // ⚡ Bolt Optimization: Prevent unnecessary real-time refreshes
+          // What: Filter realtime events so it only triggers a refresh if the interaction was made by a user in one of the active rooms.
+          // Why: Previously, any global rating activity would cause a refresh. If many users are active, this triggers excessive API calls and DB queries for every user's dashboard.
+          // Impact: Reduces unnecessary fetchRoomsWithMatches calls from O(global_events) to O(relevant_events).
+          const newRecord = payload.new as { user_id?: string };
+          if (newRecord?.user_id && relevantUserIdsRef.current.has(newRecord.user_id)) {
+            console.log('Relevant realtime update detected:', payload);
+            triggerRefresh();
+          }
         }
       )
       .subscribe();
