@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, ChevronDown, ChevronUp, Radio, User, AlertCircle, RefreshCw } from 'lucide-react'
+import { Star, ChevronDown, ChevronUp, Radio, User, AlertCircle, RefreshCw, SkipForward } from 'lucide-react'
 import RatingSlider from './RatingSlider'
 import MovieCast from './MovieCast'
 import { type TMDBMovie, type TMDBWatchProvider } from '@/lib/tmdb'
@@ -278,6 +278,17 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
                 onCommit={(v) => handleRatingSubmit(v)}
                 disabled={submitting}
               />
+
+              <div className="flex justify-center mt-2">
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  disabled={submitting}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-white/60 hover:text-white transition-colors py-2 px-4 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                >
+                  Saltar película <SkipForward className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </motion.div>
           </AnimatePresence>
         ) : (

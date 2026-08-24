@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 
 interface RatingSliderProps {
   initialValue: number
@@ -39,7 +39,7 @@ export default function RatingSlider({ initialValue, onCommit, disabled }: Ratin
           onTouchStart={() => setIsDragging(true)}
           onTouchEnd={() => setIsDragging(false)}
           aria-label="Puntuación de la película"
-          className="w-full h-2 rounded-full appearance-none bg-white/10 outline-none relative z-10 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full h-2 rounded-full appearance-none bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518] relative z-10 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         />
 
         {/* Visual progress bar overlay */}
@@ -70,10 +70,14 @@ export default function RatingSlider({ initialValue, onCommit, disabled }: Ratin
           type="button"
           disabled={disabled}
           onClick={() => onCommit(integerValue)}
-          className="bg-white text-black font-extrabold text-sm px-6 py-3 rounded-full w-full max-w-[280px] hover:bg-white/90 active:scale-[0.98] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 shadow-[0_0_25px_rgba(255,255,255,0.35)]"
+          className="bg-white text-black font-extrabold text-sm px-6 py-3 rounded-full w-full max-w-[280px] hover:bg-white/90 active:scale-[0.98] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 shadow-[0_0_25px_rgba(255,255,255,0.35)] focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
-          Confirmar Calificación
-          <CheckCircle2 className="w-4 h-4 text-black" />
+          {disabled ? 'Guardando...' : 'Confirmar Calificación'}
+          {disabled ? (
+            <Loader2 className="w-4 h-4 text-black animate-spin" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-black" />
+          )}
         </button>
       </div>
     </div>
