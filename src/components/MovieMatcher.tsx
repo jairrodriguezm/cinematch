@@ -65,28 +65,30 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
 
   const activeMovie = movies[currentIndex];
 
-  const handleSwipe = async (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
+  const handleSwipe = (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
     if (currentIndex >= movies.length || isPending) return;
     
     setIsPending(true);
     setDirection(action === 'LIKE' ? 'right' : action === 'DISCARD' ? 'left' : 'up');
 
-    // Display temporary loading status in Spanish
-    setStatusText(`Registrando "${action}"...`);
+    // ⚡ Bolt Optimization: Optimistic UI
+    // What: Removed 'await' from saveMovieInteraction and instantly advanced the cards.
+    // Why: Network latency caused the swipe animation to hesitate or block until the database responded.
+    // Impact: Animations run instantly (0ms latency), improving the perceived performance of swiping.
 
-    // Execute the Server Action
-    const result = await saveMovieInteraction(
+    // Fire-and-forget network request
+    saveMovieInteraction(
       activeMovie.id,
       action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
-    );
+    ).then((result) => {
+      if (!result.success) {
+        console.error('Error al guardar:', result.error);
+      }
+    }).catch((err) => {
+      console.error('Excepción al guardar interacción:', err);
+    });
 
-    if (result.success) {
-      setStatusText(`¡Interacción registrada con éxito!`);
-    } else {
-      console.error(result.error);
-      setStatusText(`Error al guardar: ${result.error}`);
-    }
-
+    // Animate instantly without waiting for network response
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
       setDirection(null);
