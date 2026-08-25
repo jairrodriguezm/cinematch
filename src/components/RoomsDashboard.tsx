@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Mail, Users, ArrowLeft, Film } from 'lucide-react'
+import { Plus, Mail, Users, ArrowLeft, Film, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { createRoom, joinRoom, fetchRoomsWithMatches, RoomWithMatches } from '@/app/actions/roomActions'
@@ -20,6 +20,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const [formStatus, setFormStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [joinStatus, setJoinStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   async function triggerRefresh() {
     setIsRefreshing(true);
@@ -73,7 +75,9 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       return;
     }
 
+    setIsCreating(true);
     const response = await createRoom(roomName);
+    setIsCreating(false);
     
     if (response.success) {
       setFormStatus({ success: true, message: '¡Sala creada exitosamente!' });
@@ -93,7 +97,9 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       return;
     }
 
+    setIsJoining(true);
     const response = await joinRoom(roomCode.trim());
+    setIsJoining(false);
 
     if (response.success) {
       setJoinStatus({ success: true, message: '¡Te has unido a la sala exitosamente!' });
@@ -135,24 +141,28 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
 
           <form onSubmit={handleCreateRoom} className="space-y-3.5">
             <div>
-              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
+              <label htmlFor="roomName" className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
                 Nombre de la Sala
               </label>
               <input
+                id="roomName"
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Ej. Cine de Fin de Semana"
-                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all"
+                required
+                disabled={isCreating}
+                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all disabled:opacity-50 disabled:bg-neutral-50"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2"
+              disabled={isCreating}
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] focus-visible:ring-offset-1"
             >
-              <Users className="w-4 h-4" />
-              Crear Sala
+              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
+              {isCreating ? 'Creando...' : 'Crear Sala'}
             </button>
           </form>
 
@@ -181,24 +191,28 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
 
           <form onSubmit={handleJoinRoom} className="space-y-3.5">
             <div>
-              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
+              <label htmlFor="roomCode" className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
                 Código de la Sala
               </label>
               <input
+                id="roomCode"
                 type="text"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
                 placeholder="Pega el código aquí"
-                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all"
+                required
+                disabled={isJoining}
+                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all disabled:opacity-50 disabled:bg-neutral-50"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2"
+              disabled={isJoining}
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff4365] focus-visible:ring-offset-1"
             >
-              <Plus className="w-4 h-4" />
-              Unirse
+              {isJoining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {isJoining ? 'Uniéndose...' : 'Unirse'}
             </button>
           </form>
 
