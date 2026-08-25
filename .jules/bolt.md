@@ -10,3 +10,6 @@
 ## 2024-06-01 - Supabase Realtime Event Filtering
 **Learning:** Subscribing to Supabase realtime events using wildcards (`*`) without client-side payload filtering causes severe N+1 re-render scaling issues, as every client reacts to every global platform event.
 **Action:** When subscribing to table updates (`postgres_changes`), always filter the incoming payload using a `useRef` (populated with relevant context IDs like `user.id` or room members) to discard irrelevant events and prevent unnecessary local data refreshes.
+## 2025-01-08 - Optimistic UI Updates in Swiping Interfaces
+**Learning:** Awaiting database mutations (like saving a movie rating or swipe) within the primary interaction handler causes severe perceivable latency and freezes the UI (or prevents exit animations). This makes rapid-fire interfaces feel sluggish.
+**Action:** When handling high-frequency interactions where the server response doesn't dictate the immediate next UI state, always use fire-and-forget optimistic UI updates. Advance the client state instantly and handle the network request in the background.
