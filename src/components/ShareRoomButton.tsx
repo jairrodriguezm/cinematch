@@ -1,6 +1,7 @@
 'use client'
 
-import { Share2 } from 'lucide-react'
+import { Share2, Check } from 'lucide-react'
+import { useState } from 'react'
 
 interface ShareRoomButtonProps {
   token: string
@@ -8,6 +9,8 @@ interface ShareRoomButtonProps {
 }
 
 export default function ShareRoomButton({ token, roomName }: ShareRoomButtonProps) {
+  const [copied, setCopied] = useState(false)
+
   const shareRoom = async () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'https://cinematch-five-mu.vercel.app')
     const url = `${origin}/rooms/join?token=${encodeURIComponent(token)}`
@@ -18,21 +21,28 @@ export default function ShareRoomButton({ token, roomName }: ShareRoomButtonProp
     }
 
     if (navigator.share) {
-      await navigator.share(shareData)
-      return
+      try {
+        await navigator.share(shareData)
+        return
+      } catch (err) {
+        // Fallback to clipboard if share is cancelled or fails
+      }
     }
 
     await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
     <button
       type="button"
       onClick={() => void shareRoom()}
-      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-[#f5c518] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-black transition-colors hover:bg-amber-400 active:scale-95 shadow-sm"
+      aria-label="Compartir enlace de la sala"
+      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-[#f5c518] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-black transition-colors hover:bg-amber-400 active:scale-95 shadow-sm min-w-[90px] justify-center"
     >
-      <Share2 className="h-3 w-3 text-black" />
-      Compartir
+      {copied ? <Check className="h-3 w-3 text-black" /> : <Share2 className="h-3 w-3 text-black" />}
+      {copied ? '¡Copiado!' : 'Compartir'}
     </button>
   )
 }
