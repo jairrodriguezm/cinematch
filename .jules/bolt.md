@@ -10,3 +10,7 @@
 ## 2024-06-01 - Supabase Realtime Event Filtering
 **Learning:** Subscribing to Supabase realtime events using wildcards (`*`) without client-side payload filtering causes severe N+1 re-render scaling issues, as every client reacts to every global platform event.
 **Action:** When subscribing to table updates (`postgres_changes`), always filter the incoming payload using a `useRef` (populated with relevant context IDs like `user.id` or room members) to discard irrelevant events and prevent unnecessary local data refreshes.
+
+## 2024-05-18 - [Prevent Unbounded Supabase Queries]
+**Learning:** In Next.js Server Actions, filtering data fetched from Supabase by querying a user's entire interaction history is an unbounded operation (O(total_ratings)) and will hit memory/performance bottlenecks for active users.
+**Action:** Always constrain Supabase queries inside iterative loops (like paging through TMDB results) using `.in('movie_id', currentIds)` to keep the query payload bounded to O(page_size).

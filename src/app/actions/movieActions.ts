@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getMoviesByReleaseDate, getMovieCredits, type TMDBMovie, type TMDBCastMember } from '@/lib/tmdb'
+import { getMoviesByReleaseDate, getMovieCredits, getWatchProviders, type TMDBMovie, type TMDBCastMember, type TMDBWatchProvider } from '@/lib/tmdb'
 
 interface RatingResponse {
   success: boolean;
@@ -83,20 +83,27 @@ export async function getUnratedMovieQueue(startPage: number): Promise<MovieQueu
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    let ratedIds = new Set<number>()
-    if (user) {
-      const { data: interactions } = await supabase
-        .from('user_interactions')
-        .select('movie_id')
-        .eq('user_id', user.id)
-      if (interactions) {
-        ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
-      }
-    }
-
     for (let page = Math.max(1, startPage); page <= 50; page += 1) {
       try {
         const fetched = await getMoviesByReleaseDate(page)
+
+        // ⚡ Bolt Optimization: Prevent unbounded data fetch.
+        // Instead of fetching all of a user's ratings (O(total_ratings)),
+        // we only query the DB for the IDs present in the current fetched page (O(page_size)).
+        let ratedIds = new Set<number>()
+        if (user && fetched.length > 0) {
+          const fetchedIds = fetched.map(m => m.id)
+          const { data: interactions } = await supabase
+            .from('user_interactions')
+            .select('movie_id')
+            .eq('user_id', user.id)
+            .in('movie_id', fetchedIds)
+
+          if (interactions) {
+            ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
+          }
+        }
+
         const unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
         if (unrated.length > 0) return { movies: unrated, nextPage: page + 1 }
       } catch (e) {
@@ -120,9 +127,10 @@ export async function fetchMovieCast(movieId: number): Promise<TMDBCastMember[]>
   return [];
 }
 
-export async function fetchWatchProviders(movieId: number): Promise<import('@/lib/tmdb').TMDBWatchProvider[]> {
+// ⚡ Bolt Optimization: Replaced dynamic import with static import to reduce chunking overhead.
+export async function fetchWatchProviders(movieId: number): Promise<TMDBWatchProvider[]> {
   try {
-    const providers = await import('@/lib/tmdb').then((m) => m.getWatchProviders(movieId));
+    const providers = await getWatchProviders(movieId);
     if (providers && providers.length > 0) return providers;
   } catch (error) {
     console.error('Error fetching watch providers in server action:', error);
