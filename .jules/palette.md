@@ -8,3 +8,6 @@
 ## 2025-02-12 - Missing accessible visual loading states in dashboard forms
 **Learning:** Room creation and join forms in the dashboard lacked immediate visual feedback while awaiting server response and didn't disable the submit buttons. Without this, users might tap submit multiple times or be uncertain if their action registered. Furthermore, form labels weren't properly associated with their respective inputs using `htmlFor` and `id`, reducing screen reader accessibility.
 **Action:** Always include loading states (e.g. `isCreating`, `isJoining`), visually indicate processing (e.g. spinners, disabled buttons), and explicitly associate labels with inputs using `htmlFor` and `id` to ensure forms are robust and fully accessible.
+## 2024-05-18 - Added Loader to Buttons and Input Form id
+**Learning:** Adding visual loading state helps the user to know something is loading in background and giving input form id matching label htmlFor provides better accessibility to form inputs.
+**Action:** Always add loading state visually to action button and correctly connect input label and input element.
