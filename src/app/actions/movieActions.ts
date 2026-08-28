@@ -83,20 +83,31 @@ export async function getUnratedMovieQueue(startPage: number): Promise<MovieQueu
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    let ratedIds = new Set<number>()
-    if (user) {
-      const { data: interactions } = await supabase
-        .from('user_interactions')
-        .select('movie_id')
-        .eq('user_id', user.id)
-      if (interactions) {
-        ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
-      }
-    }
-
     for (let page = Math.max(1, startPage); page <= 50; page += 1) {
       try {
         const fetched = await getMoviesByReleaseDate(page)
+
+        if (!user) {
+          if (fetched.length > 0) return { movies: fetched, nextPage: page + 1 }
+          continue;
+        }
+
+        // ⚡ Bolt Optimization: Constrained database querying inside loop
+        // What: Fetch movies from TMDB first, then query Supabase restricted to those specific IDs using .in().
+        // Why: Prevents fetching the user's entire interaction history at once, solving an O(total_ratings) bottleneck.
+        // Impact: Keeps memory minimal and ensures constant query time regardless of the user's lifetime movie ratings.
+        const currentIds = fetched.map(m => m.id);
+        const { data: interactions } = await supabase
+          .from('user_interactions')
+          .select('movie_id')
+          .eq('user_id', user.id)
+          .in('movie_id', currentIds)
+
+        let ratedIds = new Set<number>()
+        if (interactions) {
+          ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
+        }
+
         const unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
         if (unrated.length > 0) return { movies: unrated, nextPage: page + 1 }
       } catch (e) {
