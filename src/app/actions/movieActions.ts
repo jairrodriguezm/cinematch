@@ -82,22 +82,29 @@ export async function getUnratedMovieQueue(startPage: number): Promise<MovieQueu
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    
-    let ratedIds = new Set<number>()
-    if (user) {
-      const { data: interactions } = await supabase
-        .from('user_interactions')
-        .select('movie_id')
-        .eq('user_id', user.id)
-      if (interactions) {
-        ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
-      }
-    }
 
     for (let page = Math.max(1, startPage); page <= 50; page += 1) {
       try {
         const fetched = await getMoviesByReleaseDate(page)
-        const unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
+
+        let unrated = fetched
+
+        if (user && fetched.length > 0) {
+          // Optimization: Instead of fetching the user's entire rating history,
+          // we only fetch interactions for the current page's movies.
+          const movieIds = fetched.map(m => m.id)
+          const { data: interactions } = await supabase
+            .from('user_interactions')
+            .select('movie_id')
+            .eq('user_id', user.id)
+            .in('movie_id', movieIds)
+
+          if (interactions && interactions.length > 0) {
+            const ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
+            unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
+          }
+        }
+
         if (unrated.length > 0) return { movies: unrated, nextPage: page + 1 }
       } catch (e) {
         console.error(`Error fetching page ${page}:`, e)

@@ -10,3 +10,6 @@
 ## 2024-06-01 - Supabase Realtime Event Filtering
 **Learning:** Subscribing to Supabase realtime events using wildcards (`*`) without client-side payload filtering causes severe N+1 re-render scaling issues, as every client reacts to every global platform event.
 **Action:** When subscribing to table updates (`postgres_changes`), always filter the incoming payload using a `useRef` (populated with relevant context IDs like `user.id` or room members) to discard irrelevant events and prevent unnecessary local data refreshes.
+## 2024-06-15 - Unbounded History Fetching in Movie Queue
+**Learning:** Fetching a user's entire history of interactions (e.g., all rated movies) upfront just to filter out a small batch of new movies leads to unbounded memory growth and pagination issues (O(total_ratings)) over time.
+**Action:** When filtering a specific page or batch of items against user history, move the interaction query inside the loop and use an `IN` clause (e.g., `.in('movie_id', currentIds)`) to only fetch the history relevant to the current batch.
