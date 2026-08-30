@@ -82,21 +82,29 @@ export async function getUnratedMovieQueue(startPage: number): Promise<MovieQueu
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    
-    let ratedIds = new Set<number>()
-    if (user) {
-      const { data: interactions } = await supabase
-        .from('user_interactions')
-        .select('movie_id')
-        .eq('user_id', user.id)
-      if (interactions) {
-        ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
-      }
-    }
 
+    // ⚡ Bolt Optimization: Constrained Interaction Queries
+    // What: Moved the user interactions fetch inside the pagination loop, querying only the specific movie IDs returned by the current TMDB page using `.in('movie_id', currentIds)`.
+    // Why: The previous approach fetched the user's entire interaction history upfront. As a user rates hundreds or thousands of movies, this creates unbounded O(total_ratings) memory consumption and potential pagination bottlenecks.
+    // Impact: Limits the database fetch to a maximum of 20 rows per loop (the TMDB page size), ensuring constant O(1) memory usage regardless of how many movies the user has interacted with over time.
     for (let page = Math.max(1, startPage); page <= 50; page += 1) {
       try {
         const fetched = await getMoviesByReleaseDate(page)
+
+        let ratedIds = new Set<number>()
+        if (user && fetched.length > 0) {
+          const currentIds = fetched.map(m => m.id);
+          const { data: interactions } = await supabase
+            .from('user_interactions')
+            .select('movie_id')
+            .eq('user_id', user.id)
+            .in('movie_id', currentIds);
+
+          if (interactions) {
+            ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
+          }
+        }
+
         const unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
         if (unrated.length > 0) return { movies: unrated, nextPage: page + 1 }
       } catch (e) {
