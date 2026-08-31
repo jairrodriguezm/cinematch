@@ -178,26 +178,28 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
 
       const roomInteractions = allInteractions.filter(i => i.user_id !== null && memberIds.includes(i.user_id));
 
-      // Group interactions by movie_id
-      const movieInteractionsMap: { [key: number]: typeof roomInteractions } = {};
+      // ⚡ Bolt Optimization: Replace O(N²) array searches with O(N) Maps for interaction grouping.
+      // Instead of iterating an array to check if a user already voted, we key by user_id directly inside a Map.
+      const movieRatingsMap = new Map<number, Map<string, number>>();
+
       roomInteractions.forEach(interaction => {
-        if (!movieInteractionsMap[interaction.movie_id]) {
-          movieInteractionsMap[interaction.movie_id] = [];
+        if (interaction.user_id === null) return;
+
+        let ratingsByUser = movieRatingsMap.get(interaction.movie_id);
+        if (!ratingsByUser) {
+          ratingsByUser = new Map<string, number>();
+          movieRatingsMap.set(interaction.movie_id, ratingsByUser);
         }
-        // Keep a single rating per user/movie pair.
-        const alreadyExists = movieInteractionsMap[interaction.movie_id].some(
-          existing => existing.user_id === interaction.user_id
-        );
-        if (!alreadyExists) {
-          movieInteractionsMap[interaction.movie_id].push(interaction);
+
+        // Only keep the most recent rating per user/movie pair if duplicates exist
+        if (!ratingsByUser.has(interaction.user_id)) {
+          ratingsByUser.set(interaction.user_id, interaction.rating);
         }
       });
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-      Object.entries(movieInteractionsMap).forEach(([movieIdStr, votes]) => {
-        const movieId = parseInt(movieIdStr);
-        const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
+      movieRatingsMap.forEach((ratingsByUser, movieId) => {
         if (memberIds.every((userId) => (ratingsByUser.get(userId) ?? 0) >= 7)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
           allMatchedMovieIds.add(movieId);
@@ -279,25 +281,26 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return { ...room, matches: [] };
     }
 
-    const movieInteractionsMap: { [key: number]: typeof interactions } = {};
+    // ⚡ Bolt Optimization: Replace O(N²) array searches with O(N) Maps for interaction grouping.
+    const movieRatingsMap = new Map<number, Map<string, number>>();
+
     interactions.forEach(interaction => {
-      if (!movieInteractionsMap[interaction.movie_id]) {
-        movieInteractionsMap[interaction.movie_id] = [];
+      if (interaction.user_id === null) return;
+
+      let ratingsByUser = movieRatingsMap.get(interaction.movie_id);
+      if (!ratingsByUser) {
+        ratingsByUser = new Map<string, number>();
+        movieRatingsMap.set(interaction.movie_id, ratingsByUser);
       }
-      const alreadyExists = movieInteractionsMap[interaction.movie_id].some(
-        existing => existing.user_id === interaction.user_id
-      );
-      if (!alreadyExists) {
-        movieInteractionsMap[interaction.movie_id].push(interaction);
+
+      if (!ratingsByUser.has(interaction.user_id)) {
+        ratingsByUser.set(interaction.user_id, interaction.rating);
       }
     });
 
     const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-    Object.entries(movieInteractionsMap).forEach(([movieIdStr, votes]) => {
-      const movieId = parseInt(movieIdStr);
-      const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
-
+    movieRatingsMap.forEach((ratingsByUser, movieId) => {
       const participantRatings = memberIds.map(id => ratingsByUser.get(id) ?? 0);
       if (participantRatings.every(rating => rating >= 7)) {
         matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
