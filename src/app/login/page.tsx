@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 
@@ -84,6 +85,8 @@ function LoginForm() {
           Correo electrónico
           <input
             type="email"
+            required
+            aria-required="true"
             value={email}
             onChange={(event) => {
               setEmail(event.target.value)
@@ -95,14 +98,19 @@ function LoginForm() {
             className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#f5c518] focus:ring-4 focus:ring-amber-100 aria-[invalid=true]:border-red-400"
           />
         </label>
-        <button type="submit" disabled={pending !== null} className="w-full rounded-xl bg-[#f5c518] px-4 py-3 text-sm font-extrabold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md">
+        <button type="submit" disabled={pending !== null} className="w-full rounded-xl bg-[#f5c518] px-4 py-3 text-sm font-extrabold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md flex items-center justify-center gap-2">
+          {pending === 'magic' && <Loader2 className="h-4 w-4 animate-spin" />}
           {pending === 'magic' ? 'Enviando enlace...' : 'Enviar enlace mágico'}
         </button>
       </form>
 
       <div className="my-5 flex items-center gap-3 text-xs text-neutral-400"><span className="h-px flex-1 bg-neutral-200" />o<span className="h-px flex-1 bg-neutral-200" /></div>
       <button type="button" onClick={handleGoogle} disabled={pending !== null} className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 px-4 py-3 text-sm font-semibold text-[#0F0F10] transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60">
-        <span aria-hidden="true" className="text-base font-bold text-[#4285F4]">G</span>
+        {pending === 'google' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <span aria-hidden="true" className="text-base font-bold text-[#4285F4]">G</span>
+        )}
         {pending === 'google' ? 'Autenticando...' : 'Continuar con Google'}
       </button>
 
