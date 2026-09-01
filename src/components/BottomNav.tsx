@@ -16,7 +16,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="bg-zinc-900/90 backdrop-blur-2xl border border-[#f5c518]/40 shadow-[0_4px_30px_rgba(245,197,24,0.25)] fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[450px] rounded-full z-50 flex justify-around items-center py-2.5 px-4">
+    <nav aria-label="Navegación principal" className="bg-zinc-900/90 backdrop-blur-2xl border border-[#f5c518]/40 shadow-[0_4px_30px_rgba(245,197,24,0.25)] fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[450px] rounded-full z-50 flex justify-around items-center py-2.5 px-4">
       {navItems.map((item) => {
         const Icon = item.icon
         const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
@@ -26,7 +26,9 @@ export default function BottomNav() {
             key={item.href}
             href={item.href}
             aria-label={item.label}
-            className={`p-2.5 rounded-full transition-all flex items-center justify-center ${
+            aria-current={isActive ? 'page' : undefined}
+            title={item.label}
+            className={`p-2.5 rounded-full transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518] focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 ${
               isActive 
                 ? 'bg-[#f5c518] text-black shadow-[0_0_20px_rgba(245,197,24,0.6)] scale-105 font-bold' 
                 : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'
