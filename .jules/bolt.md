@@ -10,3 +10,6 @@
 ## 2024-06-01 - Supabase Realtime Event Filtering
 **Learning:** Subscribing to Supabase realtime events using wildcards (`*`) without client-side payload filtering causes severe N+1 re-render scaling issues, as every client reacts to every global platform event.
 **Action:** When subscribing to table updates (`postgres_changes`), always filter the incoming payload using a `useRef` (populated with relevant context IDs like `user.id` or room members) to discard irrelevant events and prevent unnecessary local data refreshes.
+## 2024-06-03 - N+1 scaling in match computations
+**Learning:** Using array `.some()` inside loops causes O(N²) scaling, particularly when processing interactions mapped across all users in a group. In combination with nested `.filter()` and `.find()` during data mapping, this severely throttles backend functions like matchmaking.
+**Action:** Replace embedded iteration (`.some()`, `.filter()`, `.find()`) with flat associative data structures (`Map`, `Set`, `Record`) to perform lookups in O(1) time. This ensures time complexity scales linearly, maintaining responsive API performance.
