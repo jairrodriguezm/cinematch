@@ -142,6 +142,11 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     // What: Gather all unique member IDs and fetch interactions in one query, then fetch all unique matched movies in one TMDB call.
     // Why: Prevents the N+1 query problem where each room triggers a separate DB query and API call.
     // Impact: Changes O(N) database and API operations to O(1), dramatically improving dashboard load time and realtime sync speed.
+    //
+    // ⚡ Bolt Optimization: O(N²) Array Methods to O(N) Map Lookups
+    // What: Replaced nested array loops (.some, .filter, .find) with Map lookups for grouping interactions and distributing movies.
+    // Why: Nested array methods inside the main loop create O(N²) bottlenecks as data sizes grow.
+    // Impact: Reduces CPU blocking time and maintains O(N) linear performance for backend aggregation.
 
     // 1. Gather all unique member IDs across all rooms
     const allMemberIds = new Set<string>();
@@ -179,30 +184,27 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       const roomInteractions = allInteractions.filter(i => i.user_id !== null && memberIds.includes(i.user_id));
 
       // Group interactions by movie_id
-      const movieInteractionsMap: { [key: number]: typeof roomInteractions } = {};
+      const movieInteractionsMap = new Map<number, Map<string, number>>();
       roomInteractions.forEach(interaction => {
-        if (!movieInteractionsMap[interaction.movie_id]) {
-          movieInteractionsMap[interaction.movie_id] = [];
+        if (interaction.user_id === null) return;
+        let movieGroup = movieInteractionsMap.get(interaction.movie_id);
+        if (!movieGroup) {
+          movieGroup = new Map<string, number>();
+          movieInteractionsMap.set(interaction.movie_id, movieGroup);
         }
-        // Keep a single rating per user/movie pair.
-        const alreadyExists = movieInteractionsMap[interaction.movie_id].some(
-          existing => existing.user_id === interaction.user_id
-        );
-        if (!alreadyExists) {
-          movieInteractionsMap[interaction.movie_id].push(interaction);
+        if (!movieGroup.has(interaction.user_id)) {
+          movieGroup.set(interaction.user_id, interaction.rating);
         }
       });
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-      Object.entries(movieInteractionsMap).forEach(([movieIdStr, votes]) => {
-        const movieId = parseInt(movieIdStr);
-        const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
+      for (const [movieId, ratingsByUser] of movieInteractionsMap.entries()) {
         if (memberIds.every((userId) => (ratingsByUser.get(userId) ?? 0) >= 7)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
           allMatchedMovieIds.add(movieId);
         }
-      });
+      }
 
       roomMatchesMap.set(room.id, matchedMovieIds);
     }
@@ -218,6 +220,9 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     }
 
     // 5. Distribute matches back to rooms
+    const globalMoviesMap = new Map<number, typeof globalMoviesData[0]>();
+    globalMoviesData.forEach(movie => globalMoviesMap.set(movie.id, movie));
+
     for (const room of rooms) {
       const matchedMovieIds = roomMatchesMap.get(room.id) || [];
       if (matchedMovieIds.length === 0) {
@@ -225,16 +230,16 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
         continue;
       }
 
-      const movieIds = matchedMovieIds.map(m => m.movieId);
-      const roomMoviesData = globalMoviesData.filter(movie => movieIds.includes(movie.id));
-
-      const matches: MatchedMovie[] = roomMoviesData.map(movie => {
-        const matchInfo = matchedMovieIds.find(m => m.movieId === movie.id);
-        return {
-          ...movie,
-          matchType: matchInfo?.matchType || 'SECONDARY'
-        };
-      });
+      const matches: MatchedMovie[] = [];
+      for (const { movieId, matchType } of matchedMovieIds) {
+        const movie = globalMoviesMap.get(movieId);
+        if (movie) {
+          matches.push({
+            ...movie,
+            matchType
+          });
+        }
+      }
 
       roomsWithMatches.push({
         ...room,
@@ -279,30 +284,27 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return { ...room, matches: [] };
     }
 
-    const movieInteractionsMap: { [key: number]: typeof interactions } = {};
+    const movieInteractionsMap = new Map<number, Map<string, number>>();
     interactions.forEach(interaction => {
-      if (!movieInteractionsMap[interaction.movie_id]) {
-        movieInteractionsMap[interaction.movie_id] = [];
+      if (interaction.user_id === null) return;
+      let movieGroup = movieInteractionsMap.get(interaction.movie_id);
+      if (!movieGroup) {
+        movieGroup = new Map<string, number>();
+        movieInteractionsMap.set(interaction.movie_id, movieGroup);
       }
-      const alreadyExists = movieInteractionsMap[interaction.movie_id].some(
-        existing => existing.user_id === interaction.user_id
-      );
-      if (!alreadyExists) {
-        movieInteractionsMap[interaction.movie_id].push(interaction);
+      if (!movieGroup.has(interaction.user_id)) {
+        movieGroup.set(interaction.user_id, interaction.rating);
       }
     });
 
     const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-    Object.entries(movieInteractionsMap).forEach(([movieIdStr, votes]) => {
-      const movieId = parseInt(movieIdStr);
-      const ratingsByUser = new Map(votes.map((vote) => [vote.user_id, vote.rating]));
-
+    for (const [movieId, ratingsByUser] of movieInteractionsMap.entries()) {
       const participantRatings = memberIds.map(id => ratingsByUser.get(id) ?? 0);
       if (participantRatings.every(rating => rating >= 7)) {
         matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
       }
-    });
+    }
 
     if (matchedMovieIds.length === 0) {
       return { ...room, matches: [] };
@@ -310,14 +312,19 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     const movieIds = matchedMovieIds.map(m => m.movieId);
     const moviesData = await getMoviesByIds(movieIds);
+    const moviesMap = new Map<number, typeof moviesData[0]>();
+    moviesData.forEach(m => moviesMap.set(m.id, m));
 
-    const matches: MatchedMovie[] = moviesData.map(movie => {
-      const matchInfo = matchedMovieIds.find(m => m.movieId === movie.id);
-      return {
-        ...movie,
-        matchType: matchInfo?.matchType || 'SECONDARY'
-      };
-    });
+    const matches: MatchedMovie[] = [];
+    for (const { movieId, matchType } of matchedMovieIds) {
+      const movie = moviesMap.get(movieId);
+      if (movie) {
+        matches.push({
+          ...movie,
+          matchType
+        });
+      }
+    }
 
     return {
       ...room,

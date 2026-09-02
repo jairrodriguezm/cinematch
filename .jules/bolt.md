@@ -10,3 +10,6 @@
 ## 2024-06-01 - Supabase Realtime Event Filtering
 **Learning:** Subscribing to Supabase realtime events using wildcards (`*`) without client-side payload filtering causes severe N+1 re-render scaling issues, as every client reacts to every global platform event.
 **Action:** When subscribing to table updates (`postgres_changes`), always filter the incoming payload using a `useRef` (populated with relevant context IDs like `user.id` or room members) to discard irrelevant events and prevent unnecessary local data refreshes.
+## 2024-06-15 - Array Method O(N²) Bottlenecks
+**Learning:** Using nested array methods like `.some()`, `.filter()`, or `.find()` inside a loop to group interactions or distribute relational data creates an O(N²) bottleneck in backend aggregation. While small datasets may seem fine, this setup scales poorly.
+**Action:** Replace nested array loops with `Map` (or `Set`) lookup structures when assembling data in loops to preserve linear O(N) performance.
