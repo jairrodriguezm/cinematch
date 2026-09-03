@@ -157,7 +157,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
             <button
               type="submit"
               disabled={isCreating}
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#bc96ff] to-[#ff4365] hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-[#bc96ff] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(188,150,255,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isCreating ? (
                 <>
@@ -214,7 +214,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
             <button
               type="submit"
               disabled={isJoining}
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#ff4365] to-[#bc96ff] hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-[#ff4365] text-white text-xs font-extrabold transition-all shadow-[0_0_15px_rgba(255,67,101,0.4)] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isJoining ? (
                 <>
@@ -332,10 +332,13 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB] p-4 text-center">
-                      <Film className="w-5 h-5 text-slate-600 mx-auto mb-1.5" />
+                    <div className="bg-[#FAFAFA] rounded-xl border border-dashed border-[#E5E7EB] p-4 text-center group cursor-default">
+                      <div className="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-[#bc96ff]/10 transition-colors">
+                        <Film className="w-5 h-5 text-slate-400 group-hover:text-[#bc96ff] transition-colors" />
+                      </div>
+                      <p className="text-[11px] font-semibold text-slate-700 mb-1">Aún no hay coincidencias</p>
                       <p className="text-[10px] text-neutral-500 leading-normal max-w-[200px] mx-auto">
-                        No hay coincidencias todavía. Comiencen a deslizar las películas vinculados a esta sala.
+                        Tú y los miembros de la sala necesitan darle &quot;Me gusta&quot; a las mismas películas para que aparezcan aquí.
                       </p>
                     </div>
                   )}
@@ -344,9 +347,12 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
             ))
           ) : (
             <div className="bg-[#FAFAFA] border border-dashed border-[#E5E7EB] rounded-2xl p-8 text-center mt-4">
-              <Users className="w-8 h-8 text-neutral-400 mx-auto mb-3" />
-              <p className="text-xs text-neutral-500 leading-relaxed max-w-[220px] mx-auto">
-                No tienes salas creadas todavía. Crea una para invitar a tu pareja o amigos a buscar películas juntos.
+              <div className="bg-white shadow-sm w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Users className="w-6 h-6 text-neutral-400" />
+              </div>
+              <h3 className="text-sm font-semibold text-neutral-700 mb-1">Sin salas activas</h3>
+              <p className="text-xs text-neutral-500 leading-relaxed max-w-[240px] mx-auto">
+                Crea una sala nueva o únete a una existente con un código para empezar a hacer match de películas.
               </p>
             </div>
           )}

@@ -39,7 +39,7 @@ export default function ShareRoomButton({ token, roomName }: ShareRoomButtonProp
       type="button"
       onClick={() => void shareRoom()}
       aria-label="Compartir enlace de la sala"
-      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-[#f5c518] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-black transition-colors hover:bg-amber-400 active:scale-95 shadow-sm min-w-[90px] justify-center"
+      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-[#f5c518] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-black transition-colors hover:bg-amber-400 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#f5c518] shadow-sm min-w-[90px] justify-center"
     >
       {copied ? <Check className="h-3 w-3 text-black" /> : <Share2 className="h-3 w-3 text-black" />}
       {copied ? '¡Copiado!' : 'Compartir'}
