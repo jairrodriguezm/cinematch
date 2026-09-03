@@ -170,6 +170,19 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       }
     }
 
+    // Group all interactions by user_id to avoid O(N²) array filtering
+    const interactionsByUser = new Map<string, typeof allInteractions>();
+    allInteractions.forEach(interaction => {
+      if (interaction.user_id) {
+        let userInteractions = interactionsByUser.get(interaction.user_id);
+        if (!userInteractions) {
+          userInteractions = [];
+          interactionsByUser.set(interaction.user_id, userInteractions);
+        }
+        userInteractions.push(interaction);
+      }
+    });
+
     // 3. Pre-calculate matched movies for each room
     const roomMatchesMap = new Map<string, { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[]>();
     const allMatchedMovieIds = new Set<number>();
@@ -181,7 +194,7 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
         continue;
       }
 
-      const roomInteractions = allInteractions.filter(i => i.user_id !== null && memberIds.includes(i.user_id));
+      const roomInteractions = memberIds.flatMap(userId => interactionsByUser.get(userId) || []);
 
       // Group interactions by movie_id
       const movieInteractionsMap = new Map<number, Map<string, number>>();
