@@ -13,3 +13,6 @@
 ## 2024-06-15 - Array Method O(N²) Bottlenecks
 **Learning:** Using nested array methods like `.some()`, `.filter()`, or `.find()` inside a loop to group interactions or distribute relational data creates an O(N²) bottleneck in backend aggregation. While small datasets may seem fine, this setup scales poorly.
 **Action:** Replace nested array loops with `Map` (or `Set`) lookup structures when assembling data in loops to preserve linear O(N) performance.
+## 2024-07-25 - Proactive asset preloading in sequential UIs
+**Learning:** In sequential UIs like a swipeable deck or movie queue, waiting until an item becomes active to fetch its data or images introduces perceived latency and visual flashing, degrading the user experience.
+**Action:** Preload the upcoming items' images using visually hidden `<img rel="preload">` or standard `<img>` tags and cache API responses via `useRef` or local state for the immediate next elements in the queue. This creates a seamless, 0ms transition for the user.

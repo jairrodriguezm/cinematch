@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Star, ChevronDown, ChevronUp, Radio, User, AlertCircle, RefreshCw, SkipForward } from 'lucide-react'
 import RatingSlider from './RatingSlider'
@@ -26,18 +26,51 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
 
   const activeMovie = queue[0] ?? null
 
+  // ⚡ Bolt Optimization: Cache watch providers to prevent network requests and UI flashing when skipping/rating
+  const providersCache = useRef<Record<number, TMDBWatchProvider[]>>({})
+  const [preloadedProviders, setPreloadedProviders] = useState<TMDBWatchProvider[]>([])
+
+  // Preload next movies' watch providers
+  useEffect(() => {
+    let isMounted = true;
+    const nextMovies = queue.slice(1, 4)
+    const loadProviders = async () => {
+      const allProviders: TMDBWatchProvider[] = []
+      for (const movie of nextMovies) {
+        if (!providersCache.current[movie.id]) {
+          const res = await fetchWatchProviders(movie.id)
+          providersCache.current[movie.id] = res || []
+        }
+        allProviders.push(...providersCache.current[movie.id])
+      }
+      if (isMounted) {
+        setPreloadedProviders(allProviders)
+      }
+    }
+    void loadProviders();
+
+    return () => {
+      isMounted = false
+    }
+  }, [queue])
+
   useEffect(() => {
     let isMounted = true
     if (activeMovie?.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoadingProviders(true)
-      setProviders([])
-      void fetchWatchProviders(activeMovie.id).then((res) => {
-        if (isMounted) {
-          setProviders(res || [])
-          setLoadingProviders(false)
-        }
-      })
+      if (providersCache.current[activeMovie.id]) {
+        setProviders(providersCache.current[activeMovie.id])
+        setLoadingProviders(false)
+      } else {
+        setLoadingProviders(true)
+        setProviders([])
+        void fetchWatchProviders(activeMovie.id).then((res) => {
+          if (isMounted) {
+            providersCache.current[activeMovie.id] = res || []
+            setProviders(res || [])
+            setLoadingProviders(false)
+          }
+        })
+      }
     } else {
       setProviders([])
       setLoadingProviders(false)
@@ -112,6 +145,16 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
 
   return (
     <div className="w-full h-screen max-h-screen bg-black text-white flex flex-col justify-between items-center relative overflow-hidden font-sans select-none">
+      {/* ⚡ Bolt Optimization: Hidden image preloader for next movies to ensure instant visual transition */}
+      <div className="hidden" aria-hidden="true">
+        {queue.slice(1, 4).map(movie => movie.poster_path ? (
+          <img key={`preload-poster-${movie.id}`} src={movie.poster_path} alt="" />
+        ) : null)}
+        {preloadedProviders.map((provider, i) => provider.logo_path ? (
+          <img key={`preload-logo-${provider.provider_id}-${i}`} src={provider.logo_path} alt="" />
+        ) : null)}
+      </div>
+
       {/* Fullscreen Hero Background Poster */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         {activeMovie?.poster_path ? (
