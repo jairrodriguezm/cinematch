@@ -13,3 +13,6 @@
 ## 2024-06-15 - Array Method O(N²) Bottlenecks
 **Learning:** Using nested array methods like `.some()`, `.filter()`, or `.find()` inside a loop to group interactions or distribute relational data creates an O(N²) bottleneck in backend aggregation. While small datasets may seem fine, this setup scales poorly.
 **Action:** Replace nested array loops with `Map` (or `Set`) lookup structures when assembling data in loops to preserve linear O(N) performance.
+## 2024-06-25 - TMDB Image Preloading
+**Learning:** In the CineMatch codebase, `poster_path` provided by the TMDB API proxy functions (in `src/lib/tmdb.ts`) is already an absolute URL (it prepends `imageBaseUrl`), not a relative path. The components (`MovieDeck`, `MovieMatcher`) also use native `<img>` tags, not Next.js `<Image>`. Preloading them using `react-dom`'s `preload` directly on `movie.poster_path` works correctly.
+**Action:** When working with image paths from TMDB in this codebase, remember they are already absolute URLs. When preloading native `<img>` elements, it's safe to use `react-dom`'s `preload`.
