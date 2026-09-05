@@ -198,7 +198,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
                 </div>
                 <button
                   onClick={resetStack}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-xs font-bold text-slate-100 hover:shadow-lg active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-xs font-bold text-slate-100 hover:shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/50"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   Volver a Empezar
@@ -225,7 +225,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
         <button
           onClick={() => handleSwipe('DISCARD')}
           disabled={currentIndex >= movies.length || isPending}
-          className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 active:scale-90 border border-red-500/30 flex items-center justify-center text-red-400 transition-all shadow-lg hover:shadow-red-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer"
+          className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 active:scale-90 border border-red-500/30 flex items-center justify-center text-red-400 transition-all shadow-lg hover:shadow-red-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-red-500"
           title="Descartar"
           aria-label="Descartar"
         >
@@ -235,7 +235,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
         <button
           onClick={() => handleSwipe('MAYBE')}
           disabled={currentIndex >= movies.length || isPending}
-          className="w-12 h-12 rounded-full bg-amber-500/10 hover:bg-amber-500/20 active:scale-90 border border-amber-500/30 flex items-center justify-center text-amber-400 transition-all shadow-md hover:shadow-amber-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer"
+          className="w-12 h-12 rounded-full bg-amber-500/10 hover:bg-amber-500/20 active:scale-90 border border-amber-500/30 flex items-center justify-center text-amber-400 transition-all shadow-md hover:shadow-amber-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-amber-500"
           title="Tal Vez"
           aria-label="Tal Vez"
         >
@@ -245,7 +245,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
         <button
           onClick={() => handleSwipe('LIKE')}
           disabled={currentIndex >= movies.length || isPending}
-          className="w-14 h-14 rounded-full bg-blue-500/10 hover:bg-blue-500/20 active:scale-90 border border-blue-500/30 flex items-center justify-center text-blue-400 transition-all shadow-lg hover:shadow-blue-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer"
+          className="w-14 h-14 rounded-full bg-blue-500/10 hover:bg-blue-500/20 active:scale-90 border border-blue-500/30 flex items-center justify-center text-blue-400 transition-all shadow-lg hover:shadow-blue-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-blue-500"
           title="Me Gusta"
           aria-label="Me Gusta"
         >
