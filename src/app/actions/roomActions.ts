@@ -162,8 +162,9 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       // 2. Fetch all interactions in a single query
       const { data: interactionsData, error: interactionsError } = await supabase
         .from('user_interactions')
-        .select('*')
-        .in('user_id', uniqueMemberIds);
+        .select('user_id, movie_id, rating')
+        .in('user_id', uniqueMemberIds)
+        .gte('rating', 7);
 
       if (!interactionsError && interactionsData) {
         allInteractions = interactionsData;
@@ -290,8 +291,9 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     const { data: interactions, error: interactionsError } = await supabase
       .from('user_interactions')
-      .select('*')
-      .in('user_id', memberIds);
+      .select('user_id, movie_id, rating')
+      .in('user_id', memberIds)
+      .gte('rating', 7);
 
     if (interactionsError || !interactions) {
       return { ...room, matches: [] };

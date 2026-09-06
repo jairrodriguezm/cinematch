@@ -13,3 +13,7 @@
 ## 2024-06-15 - Array Method O(N²) Bottlenecks
 **Learning:** Using nested array methods like `.some()`, `.filter()`, or `.find()` inside a loop to group interactions or distribute relational data creates an O(N²) bottleneck in backend aggregation. While small datasets may seem fine, this setup scales poorly.
 **Action:** Replace nested array loops with `Map` (or `Set`) lookup structures when assembling data in loops to preserve linear O(N) performance.
+
+## 2024-11-20 - DB Query Optimization for Matches
+**Learning:** Fetching interactions without database filtering can cause immense N+1 payload scaling, particularly since users generate many 'DISCARD' and 'MAYBE' ratings which are never used for `PRIMARY` matches (which requires rating >= 7). Querying for every column with `select('*')` exacerbates this memory usage.
+**Action:** When filtering data for matches, ensure you select only the required columns and push row filtering (e.g., `.gte('rating', 7)`) down to the database layer to dramatically decrease network payloads and application memory overhead.
