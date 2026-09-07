@@ -17,3 +17,6 @@
 ## 2024-11-20 - DB Query Optimization for Matches
 **Learning:** Fetching interactions without database filtering can cause immense N+1 payload scaling, particularly since users generate many 'DISCARD' and 'MAYBE' ratings which are never used for `PRIMARY` matches (which requires rating >= 7). Querying for every column with `select('*')` exacerbates this memory usage.
 **Action:** When filtering data for matches, ensure you select only the required columns and push row filtering (e.g., `.gte('rating', 7)`) down to the database layer to dramatically decrease network payloads and application memory overhead.
+## 2024-06-25 - Prevent O(N) memory scaling for user interactions
+**Learning:** In getUnratedMovieQueue, fetching all user interactions into a Set before filtering the movie queue creates a memory bottleneck that scales linearly with user activity. Supabase limits queries to 1000 rows by default, so power users with >1000 interactions would silently fail to filter out older movies.
+**Action:** Instead of eagerly loading the user's entire history, fetch the target movies first (e.g. 20 from TMDB), map their IDs, and then make a targeted Supabase query using `.in('movie_id', movieIds)`. This bounds the memory footprint to O(1) page size and avoids the 1000-row pagination hazard.

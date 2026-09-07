@@ -83,21 +83,33 @@ export async function getUnratedMovieQueue(startPage: number): Promise<MovieQueu
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    let ratedIds = new Set<number>()
-    if (user) {
-      const { data: interactions } = await supabase
-        .from('user_interactions')
-        .select('movie_id')
-        .eq('user_id', user.id)
-      if (interactions) {
-        ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
-      }
-    }
+    // ⚡ Bolt Optimization: Targeted Pagination Filtering
+    // What: Instead of eagerly loading the user's entire rating history (which scales O(N) with user activity
+    //       and silently fails past Supabase's default 1000 row limit), we fetch the TMDB page first.
+    // Why: By knowing the exactly 20 movie_ids on the current page, we can make a targeted .in() query.
+    // Impact: Bounds memory footprint to O(1) relative to user history and perfectly avoids pagination bugs for power users.
 
     for (let page = Math.max(1, startPage); page <= 50; page += 1) {
       try {
         const fetched = await getMoviesByReleaseDate(page)
-        const unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
+        if (fetched.length === 0) continue
+
+        let unrated = fetched
+
+        if (user) {
+          const fetchedIds = fetched.map(m => m.id)
+          const { data: interactions } = await supabase
+            .from('user_interactions')
+            .select('movie_id')
+            .eq('user_id', user.id)
+            .in('movie_id', fetchedIds)
+
+          if (interactions && interactions.length > 0) {
+            const ratedIds = new Set(interactions.map(({ movie_id }) => movie_id))
+            unrated = fetched.filter((movie) => !ratedIds.has(movie.id))
+          }
+        }
+
         if (unrated.length > 0) return { movies: unrated, nextPage: page + 1 }
       } catch (e) {
         console.error(`Error fetching page ${page}:`, e)
