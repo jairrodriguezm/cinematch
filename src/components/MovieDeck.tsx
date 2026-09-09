@@ -137,7 +137,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
         <button
           type="button"
           aria-label="Sensores en vivo"
-          className="text-[#f5c518] hover:opacity-80 transition-opacity cursor-pointer"
+          className="text-[#f5c518] hover:opacity-80 transition-opacity cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518] rounded-md"
         >
           <Radio className="w-6 h-6" />
         </button>
@@ -172,7 +172,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
             </div>
             <button
               onClick={() => void fetchMoreMovies(1)}
-              className="underline text-white font-bold hover:text-red-200 text-xs"
+              className="underline text-white font-bold hover:text-red-200 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-sm"
             >
               Reintentar
             </button>
@@ -256,7 +256,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
                     <button
                       type="button"
                       onClick={() => setIsExpanded(!isExpanded)}
-                      className="text-[#f5c518] font-mono text-[11px] font-semibold uppercase tracking-wider text-left flex items-center gap-0.5 mt-0.5 cursor-pointer hover:underline"
+                      className="text-[#f5c518] font-mono text-[11px] font-semibold uppercase tracking-wider text-left flex items-center gap-0.5 mt-0.5 cursor-pointer hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518]/50 rounded-sm px-1 -ml-1"
                     >
                       {isExpanded ? (
                         <>VER MENOS <ChevronUp className="w-3 h-3" /></>
@@ -304,7 +304,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
             <button
               type="button"
               onClick={() => void fetchMoreMovies(1)}
-              className="px-8 py-3 rounded-full text-black font-extrabold text-xs transition-all flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 bg-[#f5c518] shadow-[0_0_25px_rgba(245,197,24,0.5)]"
+              className="px-8 py-3 rounded-full text-black font-extrabold text-xs transition-all flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 bg-[#f5c518] shadow-[0_0_25px_rgba(245,197,24,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-[#f5c518]"
             >
               <RefreshCw className="w-4 h-4 text-black" />
               Reintentar
