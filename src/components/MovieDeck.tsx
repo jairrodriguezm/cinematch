@@ -112,6 +112,16 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
 
   return (
     <div className="w-full h-screen max-h-screen bg-black text-white flex flex-col justify-between items-center relative overflow-hidden font-sans select-none">
+      {/* ⚡ Bolt Optimization: Image Preloading */}
+      {/* What: Visually hidden img tags for the next 2 movies in the queue. */}
+      {/* Why: Prevents a blank flash or slow LCP when the user skips/rates and the next poster needs to load. */}
+      {/* Impact: Eliminates network delay for rendering the next slide's background image. */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        {queue.slice(1, 3).map(movie => movie.poster_path && (
+          <img key={`preload-${movie.id}`} src={movie.poster_path} alt="" />
+        ))}
+      </div>
+
       {/* Fullscreen Hero Background Poster */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         {activeMovie?.poster_path ? (
