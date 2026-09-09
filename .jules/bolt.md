@@ -20,3 +20,6 @@
 ## 2024-06-25 - Prevent O(N) memory scaling for user interactions
 **Learning:** In getUnratedMovieQueue, fetching all user interactions into a Set before filtering the movie queue creates a memory bottleneck that scales linearly with user activity. Supabase limits queries to 1000 rows by default, so power users with >1000 interactions would silently fail to filter out older movies.
 **Action:** Instead of eagerly loading the user's entire history, fetch the target movies first (e.g. 20 from TMDB), map their IDs, and then make a targeted Supabase query using `.in('movie_id', movieIds)`. This bounds the memory footprint to O(1) page size and avoids the 1000-row pagination hazard.
+## 2026-09-09 - O(N²) Array Loop and Map Aggregation Avoidance
+**Learning:** Computing shared intersections between datasets (like matched movies among users) by creating deep `Map` structures (e.g., `Map<movieId, Map<userId, rating>>`) incurs heavy object allocation overhead inside loops and scales poorly for server functions and realtime callbacks.
+**Action:** When filtering for shared matches or intersections, group the requisite IDs by user into a `Set<number>`, then perform an O(1) `Set.prototype.has()` check across the other users' sets. This drastically reduces memory footprint and iteration complexity to linear O(N).

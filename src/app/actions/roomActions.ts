@@ -195,28 +195,26 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
         continue;
       }
 
-      const roomInteractions = memberIds.flatMap(userId => interactionsByUser.get(userId) || []);
+      // ⚡ Bolt Optimization: Use Sets for faster O(1) matching intersection
+      // What: Changed the matching algorithm from building a grouped map of movies to a Set intersection of liked movies per member.
+      // Why: Eliminates thousands of object allocations (Map instances per movie) and inner loops during match finding.
+      // Impact: Reduces CPU and memory overhead during real-time dashboard updates.
 
-      // Group interactions by movie_id
-      const movieInteractionsMap = new Map<number, Map<string, number>>();
-      roomInteractions.forEach(interaction => {
-        if (interaction.user_id === null) return;
-        let movieGroup = movieInteractionsMap.get(interaction.movie_id);
-        if (!movieGroup) {
-          movieGroup = new Map<string, number>();
-          movieInteractionsMap.set(interaction.movie_id, movieGroup);
-        }
-        if (!movieGroup.has(interaction.user_id)) {
-          movieGroup.set(interaction.user_id, interaction.rating);
-        }
+      const memberLikedMovies = memberIds.map(userId => {
+        const userInteractions = interactionsByUser.get(userId) || [];
+        return new Set(userInteractions.filter(i => i.rating >= 7).map(i => i.movie_id));
       });
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
+      const firstMemberLikes = memberLikedMovies[0];
 
-      for (const [movieId, ratingsByUser] of movieInteractionsMap.entries()) {
-        if (memberIds.every((userId) => (ratingsByUser.get(userId) ?? 0) >= 7)) {
-          matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
-          allMatchedMovieIds.add(movieId);
+      if (firstMemberLikes) {
+        for (const movieId of firstMemberLikes) {
+          // Check if all other members also liked this movie
+          if (memberLikedMovies.slice(1).every(set => set.has(movieId))) {
+            matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
+            allMatchedMovieIds.add(movieId);
+          }
         }
       }
 
@@ -299,25 +297,25 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return { ...room, matches: [] };
     }
 
-    const movieInteractionsMap = new Map<number, Map<string, number>>();
+    // Group liked movies by user into Sets
+    const userLikes = new Map<string, Set<number>>();
+    memberIds.forEach(id => userLikes.set(id, new Set()));
+
     interactions.forEach(interaction => {
-      if (interaction.user_id === null) return;
-      let movieGroup = movieInteractionsMap.get(interaction.movie_id);
-      if (!movieGroup) {
-        movieGroup = new Map<string, number>();
-        movieInteractionsMap.set(interaction.movie_id, movieGroup);
-      }
-      if (!movieGroup.has(interaction.user_id)) {
-        movieGroup.set(interaction.user_id, interaction.rating);
+      if (interaction.user_id !== null && interaction.rating >= 7) {
+        userLikes.get(interaction.user_id)?.add(interaction.movie_id);
       }
     });
 
     const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-    for (const [movieId, ratingsByUser] of movieInteractionsMap.entries()) {
-      const participantRatings = memberIds.map(id => ratingsByUser.get(id) ?? 0);
-      if (participantRatings.every(rating => rating >= 7)) {
-        matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
+    const firstMemberLikes = userLikes.get(memberIds[0]);
+    if (firstMemberLikes) {
+      for (const movieId of firstMemberLikes) {
+        const otherMembersLiked = memberIds.slice(1).every(id => userLikes.get(id)?.has(movieId));
+        if (otherMembersLiked) {
+          matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
+        }
       }
     }
 
