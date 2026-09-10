@@ -172,15 +172,15 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     }
 
     // Group all interactions by user_id to avoid O(N²) array filtering
-    const interactionsByUser = new Map<string, typeof allInteractions>();
+    const interactionsByUser = new Map<string, Set<number>>();
     allInteractions.forEach(interaction => {
-      if (interaction.user_id) {
-        let userInteractions = interactionsByUser.get(interaction.user_id);
-        if (!userInteractions) {
-          userInteractions = [];
-          interactionsByUser.set(interaction.user_id, userInteractions);
+      if (interaction.user_id && interaction.rating >= 7) {
+        let userLikedMovies = interactionsByUser.get(interaction.user_id);
+        if (!userLikedMovies) {
+          userLikedMovies = new Set<number>();
+          interactionsByUser.set(interaction.user_id, userLikedMovies);
         }
-        userInteractions.push(interaction);
+        userLikedMovies.add(interaction.movie_id);
       }
     });
 
@@ -200,10 +200,7 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       // Why: Eliminates thousands of object allocations (Map instances per movie) and inner loops during match finding.
       // Impact: Reduces CPU and memory overhead during real-time dashboard updates.
 
-      const memberLikedMovies = memberIds.map(userId => {
-        const userInteractions = interactionsByUser.get(userId) || [];
-        return new Set(userInteractions.filter(i => i.rating >= 7).map(i => i.movie_id));
-      });
+      const memberLikedMovies = memberIds.map(userId => interactionsByUser.get(userId) || new Set<number>());
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
       const firstMemberLikes = memberLikedMovies[0];

@@ -23,3 +23,6 @@
 ## 2026-09-09 - O(N²) Array Loop and Map Aggregation Avoidance
 **Learning:** Computing shared intersections between datasets (like matched movies among users) by creating deep `Map` structures (e.g., `Map<movieId, Map<userId, rating>>`) incurs heavy object allocation overhead inside loops and scales poorly for server functions and realtime callbacks.
 **Action:** When filtering for shared matches or intersections, group the requisite IDs by user into a `Set<number>`, then perform an O(1) `Set.prototype.has()` check across the other users' sets. This drastically reduces memory footprint and iteration complexity to linear O(N).
+## 2024-11-20 - Map Aggregation Overhead
+**Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
+**Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
