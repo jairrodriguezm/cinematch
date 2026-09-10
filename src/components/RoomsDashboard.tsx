@@ -150,6 +150,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Ej. Cine de Fin de Semana"
+                required
+                aria-required="true"
                 className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all"
               />
             </div>
@@ -179,6 +181,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
+                role="status"
+                aria-live="polite"
                 className={`text-xs font-bold mt-3 text-center ${
                   formStatus.success ? 'text-emerald-400' : 'text-red-400'
                 }`}
@@ -207,6 +211,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
                 placeholder="Pega el código aquí"
+                required
+                aria-required="true"
                 className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all"
               />
             </div>
@@ -236,6 +242,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
+                role="status"
+                aria-live="polite"
                 className={`text-xs font-bold mt-3 text-center ${
                   joinStatus.success ? 'text-emerald-400' : 'text-red-400'
                 }`}
