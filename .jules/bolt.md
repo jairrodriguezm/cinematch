@@ -26,3 +26,6 @@
 ## 2024-11-20 - Map Aggregation Overhead
 **Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
 **Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
+## 2024-05-18 - Optimistic UI State for Rapid Sequential Actions
+**Learning:** In Tinder-like or rapid sequential rating interfaces (like MovieDeck), using a global boolean `submitting` state tightly couples UI interactivity to network latency. Blocking the next render on the current interaction's fetch response creates noticeable lag.
+**Action:** Replace global locking booleans with identifier-specific locking structures (e.g., `Set<id>`). Process state updates synchronously (fire-and-forget UI perspective), visually transition immediately, and only rollback UI state if the network request catches an error.
