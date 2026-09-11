@@ -9,3 +9,7 @@
 ## 2026-09-10 - Dynamic form feedback announcements
 **Learning:** The application uses framer-motion to dynamically display form feedback (success/error), but screen readers don't announce these changes by default.
 **Action:** When adding dynamic feedback messages (e.g. form validation, success state), always add `role="status"` and `aria-live="polite"` to ensure screen readers announce the message without requiring manual focus.
+
+## 2026-09-11 - Floating/Transient UI often lacks focus states
+**Learning:** Fixed and floating UI elements like the top navigation (TopNavigation.tsx) and the PWA Install Banner (PWAInstallBanner.tsx) often miss custom focus states, especially on icon-only and minimal buttons.
+**Action:** When working on navigation bars, pop-ups, and banners, proactively verify and add `focus-visible` ring styling to all interactive elements to ensure complete keyboard navigation support.
