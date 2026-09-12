@@ -32,10 +32,10 @@ export default function TopNavigation() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="rounded-full border border-neutral-200/80 bg-white/60 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition hover:bg-white hover:text-[#0F0F10]"
-            aria-label="Sign out"
+            className="rounded-full border border-neutral-200/80 bg-white/60 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition hover:bg-white hover:text-[#0F0F10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-neutral-400"
+            aria-label="Cerrar sesión"
           >
-            <span className="flex items-center gap-1"><LogOut className="size-3" />Sign Out</span>
+            <span className="flex items-center gap-1"><LogOut className="size-3" />Salir</span>
           </button>
         </div>
       ) : null
