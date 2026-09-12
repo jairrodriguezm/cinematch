@@ -26,3 +26,6 @@
 ## 2024-11-20 - Map Aggregation Overhead
 **Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
 **Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
+## 2024-05-18 - Optimistic concurrency in UI states
+**Learning:** Using a single global `submitting` boolean blocks UI concurrency when users interact rapidly (like rapid fire rating or swiping movies), causing network latency to be experienced as UI stutter.
+**Action:** Replace single boolean locking variables with a `Set` of actively processing IDs (e.g. `processingIds`) for lists or queues, allowing optimistic UI updates and concurrent background processing while safely locking only the specific elements being processed.
