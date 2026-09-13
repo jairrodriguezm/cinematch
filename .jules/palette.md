@@ -9,3 +9,6 @@
 ## 2026-09-10 - Dynamic form feedback announcements
 **Learning:** The application uses framer-motion to dynamically display form feedback (success/error), but screen readers don't announce these changes by default.
 **Action:** When adding dynamic feedback messages (e.g. form validation, success state), always add `role="status"` and `aria-live="polite"` to ensure screen readers announce the message without requiring manual focus.
+## 2024-10-24 - Accessibility Changes vs Localization Side Effects
+**Learning:** When implementing accessibility updates (like focus states), the automated reviewer strictly checks for unprompted side-effects. Translating existing English text to Spanish to match other elements, unless explicitly requested, is considered a blocking UI regression.
+**Action:** Keep UI string changes strictly out-of-scope when solving micro-UX or accessibility tickets. Apply utility classes and ARIA attributes in the current language context.
