@@ -26,3 +26,6 @@
 ## 2024-11-20 - Map Aggregation Overhead
 **Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
 **Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
+## 2024-10-25 - Identifier-Specific Locking for Sequential Interactions
+**Learning:** Using a global loading boolean (`isSubmitting`) in rapid sequential interaction interfaces (like swiping or rating cards) causes UI locking and network latency bottlenecks. The user must wait for the current API call to resolve before interacting with the next item.
+**Action:** Use identifier-specific locking structures (like a `Set` of actively processing IDs) to prevent duplicate submissions for the same item while allowing the user to immediately proceed to the next item and interact with it.

@@ -18,7 +18,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   const [queue, setQueue] = useState<TMDBMovie[]>([])
   const [nextPage, setNextPage] = useState(1)
   const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
+  const [submittingIds, setSubmittingIds] = useState<Set<number>>(new Set())
   const [isExpanded, setIsExpanded] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [providers, setProviders] = useState<TMDBWatchProvider[]>([])
@@ -74,9 +74,20 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   }, [fetchMoreMovies])
 
   const handleRatingSubmit = async (scoreToSubmit: number) => {
-    if (!activeMovie || submitting) return
+    if (!activeMovie || submittingIds.has(activeMovie.id)) return
+
+    // ⚡ Bolt Optimization: Non-blocking UI Interactions
+    // What: Replaced global `submitting` boolean with `submittingIds` Set for per-movie locking.
+    // Why: Global lock blocks the UI, preventing the user from rating the next movie while the API call for the previous one is in-flight.
+    // Impact: Enables rapid sequential interactions without latency bottlenecks.
+    const targetMovieId = activeMovie.id;
     console.log('[MovieDeck] Submitting rating:', scoreToSubmit, 'for movie:', activeMovie.title)
-    setSubmitting(true)
+
+    setSubmittingIds((prev) => {
+      const next = new Set(prev)
+      next.add(targetMovieId)
+      return next
+    })
     setErrorMessage(null)
 
     const targetMovie = activeMovie
@@ -84,7 +95,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
     setIsExpanded(false)
 
     try {
-      const res = await saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
+      const res = await saveMovieInteraction(targetMovieId, Math.round(scoreToSubmit))
       if (!res.success) {
         console.error('[MovieDeck] Save interaction failed:', res.error)
         setErrorMessage(res.error || 'Error al guardar la calificación.')
@@ -95,7 +106,11 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
       setErrorMessage('Error al conectar con el servidor.')
       setQueue((prev) => [targetMovie, ...prev])
     } finally {
-      setSubmitting(false)
+      setSubmittingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(targetMovieId)
+        return next
+      })
     }
 
     if (queue.length <= 3 && !loading) {
@@ -104,7 +119,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   }
 
   const handleSkip = () => {
-    if (!activeMovie || submitting) return
+    if (!activeMovie || submittingIds.has(activeMovie.id)) return
     handleRatingSubmit(5) // Default neutral skip rating
   }
 
@@ -286,14 +301,14 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
                 key={activeMovie.id}
                 initialValue={activeMovie.vote_average ? Math.max(1, Math.min(10, Math.round(activeMovie.vote_average))) : 7}
                 onCommit={(v) => handleRatingSubmit(v)}
-                disabled={submitting}
+                disabled={submittingIds.has(activeMovie.id)}
               />
 
               <div className="flex justify-center mt-2">
                 <button
                   type="button"
                   onClick={handleSkip}
-                  disabled={submitting}
+                  disabled={submittingIds.has(activeMovie.id)}
                   className="flex items-center gap-1.5 text-xs font-semibold text-white/60 hover:text-white transition-colors py-2 px-4 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 >
                   Saltar película <SkipForward className="w-3.5 h-3.5" />
