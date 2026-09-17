@@ -26,3 +26,6 @@
 ## 2024-11-20 - Map Aggregation Overhead
 **Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
 **Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
+## 2026-09-17 - Prevent full component re-render on async data fetch
+**Learning:** In large React components like `MovieDeck`, running inline asynchronous data fetching (e.g., `fetchWatchProviders`) and updating local loading state causes the entire component tree to re-render, leading to performance bottlenecks.
+**Action:** Always extract asynchronous data-fetching logic and its associated loading state into isolated, `React.memo`-wrapped child components (e.g., `WatchProviders`). This isolates state updates to the leaf node and prevents unnecessary full-page re-renders.
