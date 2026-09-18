@@ -9,3 +9,6 @@
 ## 2026-09-10 - Dynamic form feedback announcements
 **Learning:** The application uses framer-motion to dynamically display form feedback (success/error), but screen readers don't announce these changes by default.
 **Action:** When adding dynamic feedback messages (e.g. form validation, success state), always add `role="status"` and `aria-live="polite"` to ensure screen readers announce the message without requiring manual focus.
+## 2024-05-18 - Read More/Less Toggle Accessibility
+**Learning:** Found an accessibility issue in `MovieDeck.tsx` where the "VER MÁS/MENOS" (Read More/Less) toggle button lacked screen reader context for its expanded state and the content it controls.
+**Action:** Always add `aria-expanded` and `aria-controls` to disclosure widgets (like expandable descriptions) to ensure screen reader users understand the button's state and what content it affects.
