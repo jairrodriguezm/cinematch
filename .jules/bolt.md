@@ -26,3 +26,9 @@
 ## 2024-11-20 - Map Aggregation Overhead
 **Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
 **Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
+
+## 2024-05-18 - Extracted Watch Providers
+
+**Learning:** `MovieDeck` was maintaining local state (`loadingProviders`, `providers`) and running a `useEffect` on every movie change to fetch streaming providers. This caused the entire large parent component to re-render twice during the data-fetching lifecycle.
+
+**Action:** Extracted the data-fetching and loading state into an isolated, `React.memo`-wrapped child component (`MovieWatchProviders`). This pushes state down and prevents unnecessary re-renders of the heavy parent component.
