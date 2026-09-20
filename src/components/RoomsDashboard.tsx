@@ -34,7 +34,12 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const relevantUserIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    relevantUserIdsRef.current = new Set(rooms.flatMap(r => [r.created_by, r.invited_user_id].filter((id): id is string => Boolean(id))));
+    const userIds = new Set<string>();
+    for (const room of rooms) {
+      if (room.created_by) userIds.add(room.created_by);
+      if (room.invited_user_id) userIds.add(room.invited_user_id);
+    }
+    relevantUserIdsRef.current = userIds;
   }, [rooms]);
 
   // Sync rooms in real-time using Supabase Realtime subscriptions
