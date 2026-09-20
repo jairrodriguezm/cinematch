@@ -189,8 +189,7 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     const allMatchedMovieIds = new Set<number>();
 
     for (const room of rooms) {
-      const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
-      if (memberIds.length < 2) {
+      if (!room.created_by || !room.invited_user_id) {
         roomMatchesMap.set(room.id, []);
         continue;
       }
@@ -200,15 +199,15 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       // Why: Eliminates thousands of object allocations (Map instances per movie) and inner loops during match finding.
       // Impact: Reduces CPU and memory overhead during real-time dashboard updates.
 
-      const memberLikedMovies = memberIds.map(userId => interactionsByUser.get(userId) || new Set<number>());
+      const createdByLikes = interactionsByUser.get(room.created_by);
+      const invitedUserLikes = interactionsByUser.get(room.invited_user_id);
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
-      const firstMemberLikes = memberLikedMovies[0];
 
-      if (firstMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          // Check if all other members also liked this movie
-          if (memberLikedMovies.slice(1).every(set => set.has(movieId))) {
+      if (createdByLikes && invitedUserLikes) {
+        for (const movieId of createdByLikes) {
+          // Check if both members liked this movie
+          if (invitedUserLikes.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -279,15 +278,14 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return null;
     }
 
-    const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
-    if (memberIds.length < 2) {
+    if (!room.created_by || !room.invited_user_id) {
       return { ...room, matches: [] };
     }
 
     const { data: interactions, error: interactionsError } = await supabase
       .from('user_interactions')
       .select('user_id, movie_id, rating')
-      .in('user_id', memberIds)
+      .in('user_id', [room.created_by, room.invited_user_id])
       .gte('rating', 7);
 
     if (interactionsError || !interactions) {
@@ -296,7 +294,8 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     // Group liked movies by user into Sets
     const userLikes = new Map<string, Set<number>>();
-    memberIds.forEach(id => userLikes.set(id, new Set()));
+    userLikes.set(room.created_by, new Set());
+    userLikes.set(room.invited_user_id, new Set());
 
     interactions.forEach(interaction => {
       if (interaction.user_id !== null && interaction.rating >= 7) {
@@ -306,11 +305,12 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-    const firstMemberLikes = userLikes.get(memberIds[0]);
-    if (firstMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        const otherMembersLiked = memberIds.slice(1).every(id => userLikes.get(id)?.has(movieId));
-        if (otherMembersLiked) {
+    const createdByLikes = userLikes.get(room.created_by);
+    const invitedUserLikes = userLikes.get(room.invited_user_id);
+
+    if (createdByLikes && invitedUserLikes) {
+      for (const movieId of createdByLikes) {
+        if (invitedUserLikes.has(movieId)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       }
