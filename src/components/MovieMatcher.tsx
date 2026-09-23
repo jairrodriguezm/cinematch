@@ -61,45 +61,55 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | 'up' | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  // ⚡ Bolt Optimization: Non-blocking optimistic UI updates
+  // What: Replaced global `isPending` boolean with a specific Set of currently processing movie IDs.
+  // Why: A global boolean locks the entire UI, preventing users from quickly swiping through multiple cards while waiting for the network.
+  // Impact: Allows rapid sequential interactions, completely hiding network latency from the user interface.
+  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
   const activeMovie = movies[currentIndex];
 
-  const handleSwipe = async (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
-    if (currentIndex >= movies.length || isPending) return;
+  const handleSwipe = (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
+    if (currentIndex >= movies.length || !activeMovie || processingIds.has(activeMovie.id)) return;
     
-    setIsPending(true);
+    const targetMovieId = activeMovie.id;
+
+    setProcessingIds((prev) => new Set(prev).add(targetMovieId));
     setDirection(action === 'LIKE' ? 'right' : action === 'DISCARD' ? 'left' : 'up');
 
     // Display temporary loading status in Spanish
     setStatusText(`Registrando "${action}"...`);
 
-    // Execute the Server Action
-    const result = await saveMovieInteraction(
-      activeMovie.id,
-      action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
-    );
-
-    if (result.success) {
-      setStatusText(`¡Interacción registrada con éxito!`);
-    } else {
-      console.error(result.error);
-      setStatusText(`Error al guardar: ${result.error}`);
-    }
-
+    // Advance UI immediately
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
       setDirection(null);
       setStatusText(null);
-      setIsPending(false);
     }, 400); // Allow card animation to complete
+
+    // Execute the Server Action in the background
+    void saveMovieInteraction(
+      targetMovieId,
+      action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
+    ).then((result) => {
+      if (!result.success) {
+        console.error(result.error);
+        // Optionally show toast or notification here on error
+      }
+    }).finally(() => {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(targetMovieId);
+        return next;
+      });
+    });
   };
 
   const resetStack = () => {
     setCurrentIndex(0);
     setDirection(null);
     setStatusText(null);
-    setIsPending(false);
+    setProcessingIds(new Set());
   };
 
   return (
@@ -234,7 +244,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
       <div className="flex justify-center items-center gap-5 safe-pb mb-2">
         <button
           onClick={() => handleSwipe('DISCARD')}
-          disabled={currentIndex >= movies.length || isPending}
+          disabled={currentIndex >= movies.length || (activeMovie && processingIds.has(activeMovie.id))}
           className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 active:scale-90 border border-red-500/30 flex items-center justify-center text-red-400 transition-all shadow-lg hover:shadow-red-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-red-500"
           title="Descartar"
           aria-label="Descartar"
@@ -244,7 +254,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
 
         <button
           onClick={() => handleSwipe('MAYBE')}
-          disabled={currentIndex >= movies.length || isPending}
+          disabled={currentIndex >= movies.length || (activeMovie && processingIds.has(activeMovie.id))}
           className="w-12 h-12 rounded-full bg-amber-500/10 hover:bg-amber-500/20 active:scale-90 border border-amber-500/30 flex items-center justify-center text-amber-400 transition-all shadow-md hover:shadow-amber-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-amber-500"
           title="Tal Vez"
           aria-label="Tal Vez"
@@ -254,7 +264,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
 
         <button
           onClick={() => handleSwipe('LIKE')}
-          disabled={currentIndex >= movies.length || isPending}
+          disabled={currentIndex >= movies.length || (activeMovie && processingIds.has(activeMovie.id))}
           className="w-14 h-14 rounded-full bg-blue-500/10 hover:bg-blue-500/20 active:scale-90 border border-blue-500/30 flex items-center justify-center text-blue-400 transition-all shadow-lg hover:shadow-blue-500/10 disabled:opacity-30 disabled:scale-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:ring-blue-500"
           title="Me Gusta"
           aria-label="Me Gusta"
