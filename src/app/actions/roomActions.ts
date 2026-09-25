@@ -189,7 +189,10 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     const allMatchedMovieIds = new Set<number>();
 
     for (const room of rooms) {
-      const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
+      const memberIds: string[] = [];
+      if (room.created_by) memberIds.push(room.created_by);
+      if (room.invited_user_id) memberIds.push(room.invited_user_id);
+
       if (memberIds.length < 2) {
         roomMatchesMap.set(room.id, []);
         continue;
@@ -207,8 +210,11 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
 
       if (firstMemberLikes) {
         for (const movieId of firstMemberLikes) {
-          // Check if all other members also liked this movie
-          if (memberLikedMovies.slice(1).every(set => set.has(movieId))) {
+          // ⚡ Bolt Optimization: O(1) match checking for exactly 2-member rooms
+          // What: Replaced array .slice(1).every() with a direct map/set lookup for the second member.
+          // Why: Eliminates intermediate array allocations and loop overhead inside real-time updates.
+          // Impact: Avoids GC spikes during frequent interactions.
+          if (memberLikedMovies[1]?.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -279,7 +285,10 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return null;
     }
 
-    const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
+    const memberIds: string[] = [];
+    if (room.created_by) memberIds.push(room.created_by);
+    if (room.invited_user_id) memberIds.push(room.invited_user_id);
+
     if (memberIds.length < 2) {
       return { ...room, matches: [] };
     }
@@ -309,7 +318,7 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
     const firstMemberLikes = userLikes.get(memberIds[0]);
     if (firstMemberLikes) {
       for (const movieId of firstMemberLikes) {
-        const otherMembersLiked = memberIds.slice(1).every(id => userLikes.get(id)?.has(movieId));
+        const otherMembersLiked = userLikes.get(memberIds[1])?.has(movieId);
         if (otherMembersLiked) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
