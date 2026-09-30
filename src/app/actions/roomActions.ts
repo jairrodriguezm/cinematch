@@ -189,26 +189,23 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
     const allMatchedMovieIds = new Set<number>();
 
     for (const room of rooms) {
-      const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
-      if (memberIds.length < 2) {
+      if (!room.created_by || !room.invited_user_id) {
         roomMatchesMap.set(room.id, []);
         continue;
       }
 
-      // ⚡ Bolt Optimization: Use Sets for faster O(1) matching intersection
-      // What: Changed the matching algorithm from building a grouped map of movies to a Set intersection of liked movies per member.
-      // Why: Eliminates thousands of object allocations (Map instances per movie) and inner loops during match finding.
-      // Impact: Reduces CPU and memory overhead during real-time dashboard updates.
-
-      const memberLikedMovies = memberIds.map(userId => interactionsByUser.get(userId) || new Set<number>());
+      // ⚡ Bolt Optimization: Use Sets and direct property access for faster matching intersection
+      // What: Directly intersect the sets of the two room participants instead of using Map instances and array methods (.filter, .map, .every).
+      // Why: Eliminates object allocations (arrays, Maps) and inner loops during match finding for exactly 2 participants.
+      // Impact: Reduces CPU, GC, and memory overhead during real-time dashboard updates.
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
-      const firstMemberLikes = memberLikedMovies[0];
+      const creatorLikes = interactionsByUser.get(room.created_by);
+      const invitedLikes = interactionsByUser.get(room.invited_user_id);
 
-      if (firstMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          // Check if all other members also liked this movie
-          if (memberLikedMovies.slice(1).every(set => set.has(movieId))) {
+      if (creatorLikes && invitedLikes) {
+        for (const movieId of creatorLikes) {
+          if (invitedLikes.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -279,10 +276,11 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return null;
     }
 
-    const memberIds = [room.created_by, room.invited_user_id].filter((id): id is string => Boolean(id));
-    if (memberIds.length < 2) {
+    if (!room.created_by || !room.invited_user_id) {
       return { ...room, matches: [] };
     }
+
+    const memberIds = [room.created_by, room.invited_user_id];
 
     const { data: interactions, error: interactionsError } = await supabase
       .from('user_interactions')
@@ -294,25 +292,25 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
       return { ...room, matches: [] };
     }
 
-    // Group liked movies by user into Sets
-    const userLikes = new Map<string, Set<number>>();
-    memberIds.forEach(id => userLikes.set(id, new Set()));
+    // Group liked movies by user into Sets using direct object properties
+    const creatorLikes = new Set<number>();
+    const invitedLikes = new Set<number>();
 
     interactions.forEach(interaction => {
-      if (interaction.user_id !== null && interaction.rating >= 7) {
-        userLikes.get(interaction.user_id)?.add(interaction.movie_id);
+      if (interaction.rating >= 7) {
+        if (interaction.user_id === room.created_by) {
+          creatorLikes.add(interaction.movie_id);
+        } else if (interaction.user_id === room.invited_user_id) {
+          invitedLikes.add(interaction.movie_id);
+        }
       }
     });
 
     const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
-    const firstMemberLikes = userLikes.get(memberIds[0]);
-    if (firstMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        const otherMembersLiked = memberIds.slice(1).every(id => userLikes.get(id)?.has(movieId));
-        if (otherMembersLiked) {
-          matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
-        }
+    for (const movieId of creatorLikes) {
+      if (invitedLikes.has(movieId)) {
+        matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
       }
     }
 
