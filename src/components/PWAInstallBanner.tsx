@@ -57,7 +57,7 @@ export default function PWAInstallBanner() {
 
             <button
               onClick={handleInstall}
-              className="shrink-0 px-3 py-1.5 rounded-xl bg-[#f5c518] hover:bg-amber-400 text-[10px] font-black text-black transition-all active:scale-95 cursor-pointer shadow-sm"
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-[#f5c518] hover:bg-amber-400 text-[10px] font-black text-black transition-all active:scale-95 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#f5c518]"
             >
               Instalar
             </button>
@@ -65,7 +65,7 @@ export default function PWAInstallBanner() {
             <button
               onClick={() => setVisible(false)}
               aria-label="Cerrar banner de instalación"
-              className="shrink-0 p-1.5 rounded-xl text-neutral-400 hover:text-[#1A1A1A] transition-colors cursor-pointer"
+              className="shrink-0 p-1.5 rounded-xl text-neutral-400 hover:text-[#1A1A1A] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#f5c518]"
             >
               <X className="w-3.5 h-3.5" />
             </button>
