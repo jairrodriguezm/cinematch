@@ -26,3 +26,6 @@
 ## 2024-11-20 - Map Aggregation Overhead
 **Learning:** Building Maps of arrays and then redundantly generating Sets from them inside loops for real-time evaluations creates an O(N) allocation overhead that negates the performance benefit of O(1) Set lookups. In `fetchRoomsWithMatches`, recreating Sets of liked movies per user on every room iteration severely degrades performance as rooms and interactions scale.
 **Action:** When filtering for shared matches or intersections using Sets, pre-compute the Sets directly during the initial mapping phase (e.g. `Map<userId, Set<movieId>>`), and simply reference them inside the evaluation loop to maintain true constant-time lookup performance and avoid memory garbage collection spikes.
+## 2026-10-01 - Array Method O(N²) Avoidance in Exact Size Arrays
+**Learning:** In matching algorithms that deal with sets of exactly N participants (e.g. exactly 2 participants per matchmaking room), using dynamic array methods like `.map`, `.filter`, and `.slice(1).every` introduces unnecessary memory allocation overhead and looping.
+**Action:** Direct property access combined with basic boolean evaluations should be used to avoid array method performance drops when the array size is strictly constrained and small (like pairs).
