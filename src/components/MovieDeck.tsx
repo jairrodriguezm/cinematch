@@ -18,7 +18,11 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   const [queue, setQueue] = useState<TMDBMovie[]>([])
   const [nextPage, setNextPage] = useState(1)
   const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
+  /* ⚡ Bolt Optimization: Optimistic UI Locking */
+  /* What: Replace global `submitting` boolean with `submittingIds` Set. */
+  /* Why: Prevents UI locking during rapid sequential interactions (swiping/rating). */
+  /* Impact: Reduces perceived latency by allowing the next card to be rated immediately. */
+  const [submittingIds, setSubmittingIds] = useState<Set<number>>(new Set())
   const [isExpanded, setIsExpanded] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [providers, setProviders] = useState<TMDBWatchProvider[]>([])
@@ -74,9 +78,11 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   }, [fetchMoreMovies])
 
   const handleRatingSubmit = async (scoreToSubmit: number) => {
-    if (!activeMovie || submitting) return
+    if (!activeMovie || submittingIds.has(activeMovie.id)) return
     console.log('[MovieDeck] Submitting rating:', scoreToSubmit, 'for movie:', activeMovie.title)
-    setSubmitting(true)
+
+    const movieId = activeMovie.id
+    setSubmittingIds((prev) => new Set(prev).add(movieId))
     setErrorMessage(null)
 
     const targetMovie = activeMovie
@@ -95,7 +101,11 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
       setErrorMessage('Error al conectar con el servidor.')
       setQueue((prev) => [targetMovie, ...prev])
     } finally {
-      setSubmitting(false)
+      setSubmittingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(movieId)
+        return next
+      })
     }
 
     if (queue.length <= 3 && !loading) {
@@ -104,7 +114,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   }
 
   const handleSkip = () => {
-    if (!activeMovie || submitting) return
+    if (!activeMovie || submittingIds.has(activeMovie.id)) return
     handleRatingSubmit(5) // Default neutral skip rating
   }
 
@@ -286,14 +296,14 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
                 key={activeMovie.id}
                 initialValue={activeMovie.vote_average ? Math.max(1, Math.min(10, Math.round(activeMovie.vote_average))) : 7}
                 onCommit={(v) => handleRatingSubmit(v)}
-                disabled={submitting}
+                disabled={activeMovie ? submittingIds.has(activeMovie.id) : false}
               />
 
               <div className="flex justify-center mt-2">
                 <button
                   type="button"
                   onClick={handleSkip}
-                  disabled={submitting}
+                  disabled={activeMovie ? submittingIds.has(activeMovie.id) : false}
                   className="flex items-center gap-1.5 text-xs font-semibold text-white/60 hover:text-white transition-colors py-2 px-4 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 >
                   Saltar película <SkipForward className="w-3.5 h-3.5" />
