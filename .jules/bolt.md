@@ -29,3 +29,6 @@
 ## 2026-10-01 - Array Method O(N²) Avoidance in Exact Size Arrays
 **Learning:** In matching algorithms that deal with sets of exactly N participants (e.g. exactly 2 participants per matchmaking room), using dynamic array methods like `.map`, `.filter`, and `.slice(1).every` introduces unnecessary memory allocation overhead and looping.
 **Action:** Direct property access combined with basic boolean evaluations should be used to avoid array method performance drops when the array size is strictly constrained and small (like pairs).
+## 2026-10-04 - Component Extraction
+**Learning:** Extracting data-fetching logic and its associated loading state into isolated, `React.memo`-wrapped child components prevents heavy parent components (e.g., `MovieDeck`) from unnecessarily re-rendering.
+**Action:** When working with components that maintain complex internal state and perform asynchronous data fetching, isolate the fetching logic into smaller, memoized subcomponents to ensure updates from loaded data or unrelated parent interactions do not bottleneck UI rendering.
