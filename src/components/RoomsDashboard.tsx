@@ -152,7 +152,8 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 placeholder="Ej. Cine de Fin de Semana"
                 required
                 aria-required="true"
-                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all"
+                disabled={isCreating}
+                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-neutral-100"
               />
             </div>
 
@@ -213,7 +214,12 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 placeholder="Pega el código aquí"
                 required
                 aria-required="true"
-                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all"
+                disabled={isJoining}
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
+                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-neutral-100"
               />
             </div>
 
