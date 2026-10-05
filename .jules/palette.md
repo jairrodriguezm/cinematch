@@ -9,3 +9,7 @@
 ## 2026-09-10 - Dynamic form feedback announcements
 **Learning:** The application uses framer-motion to dynamically display form feedback (success/error), but screen readers don't announce these changes by default.
 **Action:** When adding dynamic feedback messages (e.g. form validation, success state), always add `role="status"` and `aria-live="polite"` to ensure screen readers announce the message without requiring manual focus.
+
+## 2024-10-05 - Form Input State and Mobile UX
+**Learning:** Text inputs for explicit data formats (emails, unique access codes) can be frustrating on mobile devices if the OS keyboard attempts to autocorrect or auto-capitalize them. In addition, these inputs often lack visual feedback when an async submission (like a magic link request) is pending.
+**Action:** When implementing or modifying form inputs for structured data (like emails or room codes), explicitly disable interference using `autoComplete="off"`, `autoCapitalize="none"`, `autoCorrect="off"`, and `spellCheck="false"`. For emails, `autoComplete="email"` can be used specifically. Additionally, always ensure inputs have a `disabled={isPending}` prop coupled with Tailwind styles like `disabled:opacity-60 disabled:cursor-not-allowed` to signal state.
