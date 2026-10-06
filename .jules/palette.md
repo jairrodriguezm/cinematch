@@ -9,3 +9,6 @@
 ## 2026-09-10 - Dynamic form feedback announcements
 **Learning:** The application uses framer-motion to dynamically display form feedback (success/error), but screen readers don't announce these changes by default.
 **Action:** When adding dynamic feedback messages (e.g. form validation, success state), always add `role="status"` and `aria-live="polite"` to ensure screen readers announce the message without requiring manual focus.
+## 2024-05-14 - Mobile Keyboard Interference on Code Inputs
+**Learning:** In Next.js/React applications, when rendering form inputs that expect raw application codes (like room tokens), mobile keyboards often actively interfere by attempting to auto-capitalize, auto-correct, or suggest words, making it frustrating to enter or paste exact alphanumeric strings.
+**Action:** Always append `autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false}` to such specific inputs. Additionally, robust UX requires locking the input (`disabled`) and styling it appropriately (`disabled:opacity-60 disabled:cursor-not-allowed`) during asynchronous operations to prevent duplicate submissions or confusion while the user waits.
