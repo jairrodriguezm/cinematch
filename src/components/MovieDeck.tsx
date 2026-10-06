@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Star, ChevronDown, ChevronUp, Radio, User, AlertCircle, RefreshCw, SkipForward } from 'lucide-react'
 import RatingSlider from './RatingSlider'
 import MovieCast from './MovieCast'
-import { type TMDBMovie, type TMDBWatchProvider } from '@/lib/tmdb'
-import { getUnratedMovieQueue, saveMovieInteraction, fetchWatchProviders } from '@/app/actions/movieActions'
+import WatchProviders from './WatchProviders'
+import { type TMDBMovie } from '@/lib/tmdb'
+import { getUnratedMovieQueue, saveMovieInteraction } from '@/app/actions/movieActions'
 import { useAuth } from '@/context/AuthContext'
 
 interface MovieDeckProps {
@@ -25,31 +26,8 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
   const [submittingIds, setSubmittingIds] = useState<Set<number>>(new Set())
   const [isExpanded, setIsExpanded] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [providers, setProviders] = useState<TMDBWatchProvider[]>([])
-  const [loadingProviders, setLoadingProviders] = useState<boolean>(false)
 
   const activeMovie = queue[0] ?? null
-
-  useEffect(() => {
-    let isMounted = true
-    if (activeMovie?.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoadingProviders(true)
-      setProviders([])
-      void fetchWatchProviders(activeMovie.id).then((res) => {
-        if (isMounted) {
-          setProviders(res || [])
-          setLoadingProviders(false)
-        }
-      })
-    } else {
-      setProviders([])
-      setLoadingProviders(false)
-    }
-    return () => {
-      isMounted = false
-    }
-  }, [activeMovie?.id])
 
   const fetchMoreMovies = useCallback(async (pageToFetch: number) => {
     console.log('[MovieDeck] Fetching movie queue for page:', pageToFetch)
@@ -239,32 +217,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
                   </div>
 
                   {/* Watch Provider Chips next to Rating Star */}
-                  {loadingProviders ? (
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-1 rounded-full text-xs font-medium text-white/60 animate-pulse shrink-0">
-                      Cargando...
-                    </div>
-                  ) : providers.length > 0 ? (
-                    providers.slice(0, 3).map((provider) => (
-                      <div
-                        key={provider.provider_id}
-                        className="bg-white/10 backdrop-blur-md border border-white/15 px-2.5 py-1 rounded-full flex items-center gap-1.5 text-xs font-medium text-white/90 shadow-sm shrink-0"
-                        title={provider.provider_name}
-                      >
-                        {provider.logo_path ? (
-                          <img
-                            src={provider.logo_path}
-                            alt={provider.provider_name}
-                            className="w-4 h-4 rounded object-cover shrink-0"
-                          />
-                        ) : null}
-                        <span>{provider.provider_name}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-1 rounded-full text-xs font-medium text-white/60 shadow-sm shrink-0">
-                      Sin streaming
-                    </div>
-                  )}
+                  <WatchProviders movieId={activeMovie.id} />
                 </div>
 
                 {/* Description Overview with Strict Toggle Logic */}
