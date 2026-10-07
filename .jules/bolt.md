@@ -29,3 +29,6 @@
 ## 2026-10-01 - Array Method O(N²) Avoidance in Exact Size Arrays
 **Learning:** In matching algorithms that deal with sets of exactly N participants (e.g. exactly 2 participants per matchmaking room), using dynamic array methods like `.map`, `.filter`, and `.slice(1).every` introduces unnecessary memory allocation overhead and looping.
 **Action:** Direct property access combined with basic boolean evaluations should be used to avoid array method performance drops when the array size is strictly constrained and small (like pairs).
+## 2024-04-20 - Avoid Array allocation overhead in exact size constraints
+**Learning:** In matchmaking algorithms or loops that deal with strictly constrained arrays (like rooms with exactly two members: `created_by` and `invited_user_id`), using array chaining like `.flatMap` followed by `.filter` creates multiple temporary arrays per iteration. This incurs significant memory allocation and garbage collection overhead, particularly when iterating over many rooms during dashboard loads or real-time syncs.
+**Action:** Replace `array.flatMap(r => [r.id1, r.id2].filter(Boolean))` with direct property access inside a standard `for...of` loop and direct `Set` insertion to eliminate intermediate array allocations.

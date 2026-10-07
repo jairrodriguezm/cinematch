@@ -34,7 +34,16 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const relevantUserIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    relevantUserIdsRef.current = new Set(rooms.flatMap(r => [r.created_by, r.invited_user_id].filter((id): id is string => Boolean(id))));
+    // ⚡ Bolt Optimization: Avoid O(N) array allocation overhead in exact size constraints
+    // What: Replaced rooms.flatMap and .filter with direct property checks inside a loop to update relevantUserIdsRef.
+    // Why: Matchmaking rooms strictly contain created_by and invited_user_id. Using array chaining (.flatMap, .filter) creates temporary array allocations per room.
+    // Impact: Avoids unnecessary memory allocation and object creation, slightly improving iteration overhead on dashboard mount and refresh.
+    const newRelevantUserIds = new Set<string>();
+    for (const room of rooms) {
+      if (room.created_by) newRelevantUserIds.add(room.created_by);
+      if (room.invited_user_id) newRelevantUserIds.add(room.invited_user_id);
+    }
+    relevantUserIdsRef.current = newRelevantUserIds;
   }, [rooms]);
 
   // Sync rooms in real-time using Supabase Realtime subscriptions
