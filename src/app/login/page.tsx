@@ -93,7 +93,12 @@ function LoginForm() {
             placeholder="tu@correo.com"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'login-error' : undefined}
-            className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#f5c518] focus:ring-4 focus:ring-amber-100 aria-[invalid=true]:border-red-400"
+            autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            disabled={pending !== null}
+            className="mt-2 w-full rounded-xl border border-neutral-200 px-3.5 py-3 text-sm outline-none transition focus:border-[#f5c518] focus:ring-4 focus:ring-amber-100 aria-[invalid=true]:border-red-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-neutral-50"
           />
         </label>
         <button type="submit" disabled={pending !== null} className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#f5c518] px-4 py-3 text-sm font-extrabold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#f5c518]">
