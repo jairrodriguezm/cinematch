@@ -29,3 +29,6 @@
 ## 2026-10-01 - Array Method O(N²) Avoidance in Exact Size Arrays
 **Learning:** In matching algorithms that deal with sets of exactly N participants (e.g. exactly 2 participants per matchmaking room), using dynamic array methods like `.map`, `.filter`, and `.slice(1).every` introduces unnecessary memory allocation overhead and looping.
 **Action:** Direct property access combined with basic boolean evaluations should be used to avoid array method performance drops when the array size is strictly constrained and small (like pairs).
+## 2024-10-09 - UI Blocking by Network Requests in Swipe Animations
+**Learning:** Sequential interactions like Tinder-style swiping can feel severely broken if the UI state relies on a global `isPending` boolean that `await`s a network response. Even if the network is fast, the latency blocks the next user action.
+**Action:** Decouple optimistic network requests using `.then()` instead of `await`, and use identifier-specific locks (like a `pendingIds` Set) rather than global boolean locks to maintain robust, unblocked interactive sequences.
