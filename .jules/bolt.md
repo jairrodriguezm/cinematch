@@ -29,3 +29,6 @@
 ## 2026-10-01 - Array Method O(N²) Avoidance in Exact Size Arrays
 **Learning:** In matching algorithms that deal with sets of exactly N participants (e.g. exactly 2 participants per matchmaking room), using dynamic array methods like `.map`, `.filter`, and `.slice(1).every` introduces unnecessary memory allocation overhead and looping.
 **Action:** Direct property access combined with basic boolean evaluations should be used to avoid array method performance drops when the array size is strictly constrained and small (like pairs).
+## 2024-11-20 - Resource Preloading with React DOM
+**Learning:** Using visually hidden `<img>` tags inside the DOM component tree (`<div style={{ display: 'none' }}><img src="..." /></div>`) to preload assets creates unnecessary DOM elements that degrade rendering performance and interact poorly with React's reconciliation cycle.
+**Action:** Always use `react-dom`'s native `preload(url, { as: 'image' })` function invoked during the render phase. This offloads the work to the browser's optimized resource fetcher without bloating the DOM.
