@@ -29,3 +29,6 @@
 ## 2026-10-01 - Array Method O(N²) Avoidance in Exact Size Arrays
 **Learning:** In matching algorithms that deal with sets of exactly N participants (e.g. exactly 2 participants per matchmaking room), using dynamic array methods like `.map`, `.filter`, and `.slice(1).every` introduces unnecessary memory allocation overhead and looping.
 **Action:** Direct property access combined with basic boolean evaluations should be used to avoid array method performance drops when the array size is strictly constrained and small (like pairs).
+## 2024-03-24 - React 19 Image Preloading Build Gotcha
+**Learning:** When using `react-dom`'s `preload` function inside JSX for multiple items, mapping over the array must explicitly `return null;`. Using methods like `.forEach()` that return `void` will cause Next.js/TypeScript to fail the build with a `Type 'void' is not assignable to type 'ReactNode'` error.
+**Action:** Always use `.map(item => { preload(...); return null; })` when executing side-effects like preloading directly in the JSX render path.
