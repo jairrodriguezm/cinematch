@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { preload } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import ContentCard from './ContentCard'
 import { TMDBMovie } from '@/lib/tmdb'
@@ -105,14 +106,13 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
   return (
     <div className="flex-1 flex flex-col justify-between p-6">
       {/* ⚡ Bolt Optimization: Image Preloading */}
-      {/* What: Visually hidden img tags for the next 2 movies in the queue. */}
-      {/* Why: Prevents a blank flash or slow LCP when the user swipes and the next poster needs to load. */}
-      {/* Impact: Eliminates network delay for rendering the next slide's background image. */}
-      <div style={{ display: 'none' }} aria-hidden="true">
-        {movies.slice(currentIndex + 1, currentIndex + 3).map(movie => movie.poster_path && (
-          <img key={`preload-${movie.id}`} src={movie.poster_path} alt="" />
-        ))}
-      </div>
+      {/* What: Preload the next 2 movies in the queue via react-dom. */}
+      {/* Why: Prevents a blank flash or slow LCP without injecting hidden DOM elements. */}
+      {/* Impact: Eliminates network delay and DOM bloat for rendering the next slide's background image. */}
+      {movies.slice(currentIndex + 1, currentIndex + 3).map(movie => {
+        if (movie.poster_path) preload(movie.poster_path, { as: 'image' });
+        return null;
+      })}
 
       {/* PWA App Bar / iOS Header */}
       <div className="flex flex-col gap-1 items-center justify-center text-center mt-2 mb-4">
