@@ -163,7 +163,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 flex flex-col justify-end pt-[12vh] pb-[130px] px-5 md:px-8 max-w-[550px] mx-auto w-full overflow-y-auto no-scrollbar">
         {errorMessage && (
-          <div className="mb-3 p-3 rounded-xl bg-red-900/80 border border-red-500 text-red-100 text-xs font-medium flex items-center justify-between gap-2 shadow-lg">
+          <div role="alert" className="mb-3 p-3 rounded-xl bg-red-900/80 border border-red-500 text-red-100 text-xs font-medium flex items-center justify-between gap-2 shadow-lg">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
@@ -222,13 +222,15 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
 
                 {/* Description Overview with Strict Toggle Logic */}
                 <div className="mt-1 flex flex-col gap-0.5">
-                  <p className={`text-xs md:text-sm text-white/90 leading-relaxed font-normal drop-shadow-sm ${isExpanded ? '' : 'line-clamp-2'}`}>
+                  <p id="movie-description" className={`text-xs md:text-sm text-white/90 leading-relaxed font-normal drop-shadow-sm ${isExpanded ? '' : 'line-clamp-2'}`}>
                     {activeMovie.overview && activeMovie.overview.trim() ? activeMovie.overview : 'Sin descripción disponible.'}
                   </p>
                   {activeMovie.overview && activeMovie.overview.trim().length > 120 && (
                     <button
                       type="button"
                       onClick={() => setIsExpanded(!isExpanded)}
+                      aria-expanded={isExpanded}
+                      aria-controls="movie-description"
                       className="text-[#f5c518] font-mono text-[11px] font-semibold uppercase tracking-wider text-left flex items-center gap-0.5 mt-0.5 cursor-pointer hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518]/50 rounded-sm px-1 -ml-1"
                     >
                       {isExpanded ? (
@@ -266,7 +268,7 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
           </AnimatePresence>
         ) : (
           /* Empty State */
-          <div className="flex flex-col items-center justify-center text-center p-8 my-auto bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl">
+          <div role="status" aria-live="polite" className="flex flex-col items-center justify-center text-center p-8 my-auto bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-[#38bdf8]/20 text-[#38bdf8] flex items-center justify-center mb-4">
               <Star className="w-8 h-8 fill-current" />
             </div>
