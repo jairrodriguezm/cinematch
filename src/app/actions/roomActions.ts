@@ -210,8 +210,15 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
       if (firstMemberLikes && secondMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          if (secondMemberLikes.has(movieId)) {
+        // ⚡ Bolt Optimization: O(min(M, N)) Set Intersection
+        // What: Compare set sizes and iterate over the smaller one.
+        // Why: When finding shared matches, one user might have 10 likes and the other 1000. Iterating over the smaller set minimizes loop iterations.
+        // Impact: Reduces time complexity from O(M) (first member size) to O(min(M, N)), improving backend matching speed.
+        const smallerSet = firstMemberLikes.size <= secondMemberLikes.size ? firstMemberLikes : secondMemberLikes;
+        const largerSet = firstMemberLikes.size <= secondMemberLikes.size ? secondMemberLikes : firstMemberLikes;
+
+        for (const movieId of smallerSet) {
+          if (largerSet.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -311,9 +318,14 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     const firstMemberLikes = userLikes.get(room.created_by);
     const secondMemberLikes = userLikes.get(room.invited_user_id);
+
     if (firstMemberLikes && secondMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        if (secondMemberLikes.has(movieId)) {
+      // ⚡ Bolt Optimization: O(min(M, N)) Set Intersection
+      const smallerSet = firstMemberLikes.size <= secondMemberLikes.size ? firstMemberLikes : secondMemberLikes;
+      const largerSet = firstMemberLikes.size <= secondMemberLikes.size ? secondMemberLikes : firstMemberLikes;
+
+      for (const movieId of smallerSet) {
+        if (largerSet.has(movieId)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       }
