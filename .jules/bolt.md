@@ -32,3 +32,7 @@
 ## 2024-03-24 - React 19 Image Preloading Build Gotcha
 **Learning:** When using `react-dom`'s `preload` function inside JSX for multiple items, mapping over the array must explicitly `return null;`. Using methods like `.forEach()` that return `void` will cause Next.js/TypeScript to fail the build with a `Type 'void' is not assignable to type 'ReactNode'` error.
 **Action:** Always use `.map(item => { preload(...); return null; })` when executing side-effects like preloading directly in the JSX render path.
+
+## 2024-05-24 - O(min(M, N)) Set Intersection Optimization
+**Learning:** When finding the intersection between two Sets (e.g., when determining shared liked movies between two users), blindly iterating over one Set and checking the other via `has()` can be inefficient if the first Set is much larger.
+**Action:** Always compare the sizes of the two Sets first. Iterate over the smaller Set and check for existence in the larger Set. This guarantees the intersection runs in O(min(M, N)) time instead of O(M) time, preventing unnecessary loops.
