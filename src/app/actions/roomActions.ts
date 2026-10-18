@@ -209,9 +209,17 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
+      // ⚡ Bolt Optimization: O(min(M,N)) Set intersection
+      // What: Compare Set sizes and iterate over the smaller one.
+      // Why: Avoids unnecessary iterations when one user has rated significantly more movies.
+      // Impact: Reduces loop iterations to ensure O(min(M,N)) time complexity, saving CPU cycles.
       if (firstMemberLikes && secondMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          if (secondMemberLikes.has(movieId)) {
+        const [smaller, larger] = firstMemberLikes.size < secondMemberLikes.size
+          ? [firstMemberLikes, secondMemberLikes]
+          : [secondMemberLikes, firstMemberLikes];
+
+        for (const movieId of smaller) {
+          if (larger.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -311,9 +319,17 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     const firstMemberLikes = userLikes.get(room.created_by);
     const secondMemberLikes = userLikes.get(room.invited_user_id);
+    // ⚡ Bolt Optimization: O(min(M,N)) Set intersection
+    // What: Compare Set sizes and iterate over the smaller one.
+    // Why: Avoids unnecessary iterations when one user has rated significantly more movies.
+    // Impact: Reduces loop iterations to ensure O(min(M,N)) time complexity, saving CPU cycles.
     if (firstMemberLikes && secondMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        if (secondMemberLikes.has(movieId)) {
+      const [smaller, larger] = firstMemberLikes.size < secondMemberLikes.size
+        ? [firstMemberLikes, secondMemberLikes]
+        : [secondMemberLikes, firstMemberLikes];
+
+      for (const movieId of smaller) {
+        if (larger.has(movieId)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       }
