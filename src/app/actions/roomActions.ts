@@ -204,14 +204,22 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       // Why: Using .map, .filter, and .slice(1).every on an array of two items creates unnecessary object allocations and inner loops.
       // Impact: Reduces CPU blocking time and maintains O(N) linear performance for backend aggregation.
 
+      // ⚡ Bolt Optimization: O(min(M, N)) Set Intersections
+      // What: Dynamically determine the smaller Set to iterate over when computing shared matches.
+      // Why: Defaulting to iterating over the first user's Set can cause massive overhead if they have 5000 ratings and the second user has only 5.
+      // Impact: Guarantees O(min(M, N)) time complexity for set intersection, preventing CPU spikes with heavily active power users.
       const firstMemberLikes = interactionsByUser.get(room.created_by);
       const secondMemberLikes = interactionsByUser.get(room.invited_user_id);
 
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
       if (firstMemberLikes && secondMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          if (secondMemberLikes.has(movieId)) {
+        const [smallerSet, largerSet] = firstMemberLikes.size < secondMemberLikes.size
+          ? [firstMemberLikes, secondMemberLikes]
+          : [secondMemberLikes, firstMemberLikes];
+
+        for (const movieId of smallerSet) {
+          if (largerSet.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -309,11 +317,19 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
 
     const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
+    // ⚡ Bolt Optimization: O(min(M, N)) Set Intersections
+    // What: Dynamically determine the smaller Set to iterate over when computing shared matches.
+    // Why: Defaulting to iterating over the first user's Set can cause massive overhead if they have 5000 ratings and the second user has only 5.
+    // Impact: Guarantees O(min(M, N)) time complexity for set intersection, preventing CPU spikes with heavily active power users.
     const firstMemberLikes = userLikes.get(room.created_by);
     const secondMemberLikes = userLikes.get(room.invited_user_id);
     if (firstMemberLikes && secondMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        if (secondMemberLikes.has(movieId)) {
+      const [smallerSet, largerSet] = firstMemberLikes.size < secondMemberLikes.size
+        ? [firstMemberLikes, secondMemberLikes]
+        : [secondMemberLikes, firstMemberLikes];
+
+      for (const movieId of smallerSet) {
+        if (largerSet.has(movieId)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       }
