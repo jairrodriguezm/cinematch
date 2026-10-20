@@ -34,7 +34,16 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
   const relevantUserIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    relevantUserIdsRef.current = new Set(rooms.flatMap(r => [r.created_by, r.invited_user_id].filter((id): id is string => Boolean(id))));
+    // ⚡ Bolt Optimization: Avoid unnecessary array chaining and allocations
+    // What: Use direct properties instead of flatMap, array creation, and filter
+    // Why: Avoids creating short-lived arrays for pairs that will immediately be garbage collected
+    // Impact: Reduces GC spikes when rooms array updates, particularly during real-time syncs
+    const userIds = new Set<string>();
+    for (const r of rooms) {
+      if (r.created_by) userIds.add(r.created_by);
+      if (r.invited_user_id) userIds.add(r.invited_user_id);
+    }
+    relevantUserIdsRef.current = userIds;
   }, [rooms]);
 
   // Sync rooms in real-time using Supabase Realtime subscriptions
