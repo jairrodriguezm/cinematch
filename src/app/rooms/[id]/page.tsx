@@ -24,7 +24,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-[#0F0F10]">
         <h1 className="text-xl font-bold mb-4">Sala no encontrada</h1>
-        <Link href="/rooms" className="text-sm font-semibold text-[#bc96ff] hover:underline">
+        <Link href="/rooms" className="text-sm font-semibold text-[#bc96ff] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] focus-visible:ring-offset-2 rounded-sm">
           Volver a Mis Salas
         </Link>
       </div>
@@ -38,7 +38,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-[#0F0F10]">
         <h1 className="text-xl font-bold mb-4">Acceso Denegado</h1>
         <p className="text-sm text-neutral-500 mb-4 text-center">No tienes permiso para ver esta sala.</p>
-        <Link href="/rooms" className="text-sm font-semibold text-[#bc96ff] hover:underline">
+        <Link href="/rooms" className="text-sm font-semibold text-[#bc96ff] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] focus-visible:ring-offset-2 rounded-sm">
           Volver a Mis Salas
         </Link>
       </div>
@@ -52,7 +52,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
       <div className="flex items-center justify-between mb-6">
         <Link
           href="/rooms"
-          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#bc96ff] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full"
+          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#bc96ff] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] focus-visible:ring-offset-2"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Mis Salas
