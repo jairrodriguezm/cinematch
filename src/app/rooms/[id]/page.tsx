@@ -52,7 +52,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
       <div className="flex items-center justify-between mb-6">
         <Link
           href="/rooms"
-          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#bc96ff] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full"
+          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#bc96ff] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Mis Salas
