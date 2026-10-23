@@ -210,8 +210,16 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
       if (firstMemberLikes && secondMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          if (secondMemberLikes.has(movieId)) {
+        // ⚡ Bolt Optimization: O(min(N, M)) Set intersection
+        // What: Compare the size of firstMemberLikes and secondMemberLikes, and iterate over the smaller set.
+        // Why: Iterating over the smaller set reduces the number of loops, optimizing the Set intersection to O(min(N, M)).
+        // Impact: Faster calculation of matched movies, especially when one user has significantly more likes than the other.
+        const [smallerSet, largerSet] = firstMemberLikes.size <= secondMemberLikes.size
+          ? [firstMemberLikes, secondMemberLikes]
+          : [secondMemberLikes, firstMemberLikes];
+
+        for (const movieId of smallerSet) {
+          if (largerSet.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -312,8 +320,16 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
     const firstMemberLikes = userLikes.get(room.created_by);
     const secondMemberLikes = userLikes.get(room.invited_user_id);
     if (firstMemberLikes && secondMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        if (secondMemberLikes.has(movieId)) {
+      // ⚡ Bolt Optimization: O(min(N, M)) Set intersection
+      // What: Compare the size of firstMemberLikes and secondMemberLikes, and iterate over the smaller set.
+      // Why: Iterating over the smaller set reduces the number of loops, optimizing the Set intersection to O(min(N, M)).
+      // Impact: Faster calculation of matched movies, especially when one user has significantly more likes than the other.
+      const [smallerSet, largerSet] = firstMemberLikes.size <= secondMemberLikes.size
+        ? [firstMemberLikes, secondMemberLikes]
+        : [secondMemberLikes, firstMemberLikes];
+
+      for (const movieId of smallerSet) {
+        if (largerSet.has(movieId)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       }
