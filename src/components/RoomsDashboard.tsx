@@ -116,7 +116,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
       <div className="flex items-center justify-between mb-6">
         <Link 
           href="/" 
-          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#f5c518] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full"
+          className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-[#f5c518] transition-colors uppercase tracking-wider bg-white border border-[#E5E7EB] px-3 py-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Volver a Deslizar
@@ -278,7 +278,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 rounded-full blur-2xl pointer-events-none" />
                 )}
 
-                <Link href={`/rooms/${room.id}`} className="block">
+                <Link href={`/rooms/${room.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] rounded-t-xl">
                   <div className="flex justify-between items-start border-b border-[#F3F4F6] pb-3 mb-3 cursor-pointer hover:bg-gray-50/50 rounded-t-xl transition-colors p-2 -mx-2 -mt-2">
                     <div>
                       <h3 className="text-sm font-semibold text-[#0F0F10] leading-snug">
