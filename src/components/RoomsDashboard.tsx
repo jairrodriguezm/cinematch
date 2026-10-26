@@ -278,7 +278,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 rounded-full blur-2xl pointer-events-none" />
                 )}
 
-                <Link href={`/rooms/${room.id}`} className="block">
+                <Link href={`/rooms/${room.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff] focus-visible:ring-offset-2 rounded-lg">
                   <div className="flex justify-between items-start border-b border-[#F3F4F6] pb-3 mb-3 cursor-pointer hover:bg-gray-50/50 rounded-t-xl transition-colors p-2 -mx-2 -mt-2">
                     <div>
                       <h3 className="text-sm font-semibold text-[#0F0F10] leading-snug">
