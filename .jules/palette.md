@@ -12,3 +12,6 @@
 ## 2024-05-14 - Mobile Keyboard Interference on Code Inputs
 **Learning:** In Next.js/React applications, when rendering form inputs that expect raw application codes (like room tokens), mobile keyboards often actively interfere by attempting to auto-capitalize, auto-correct, or suggest words, making it frustrating to enter or paste exact alphanumeric strings.
 **Action:** Always append `autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false}` to such specific inputs. Additionally, robust UX requires locking the input (`disabled`) and styling it appropriately (`disabled:opacity-60 disabled:cursor-not-allowed`) during asynchronous operations to prevent duplicate submissions or confusion while the user waits.
+## 2026-10-26 - Focus States on Navigation Links
+**Learning:** Next.js Link components used as primary navigation or wrapping interactive cards lose default browser focus outlines when Tailwind resets are applied, breaking keyboard navigation.
+**Action:** Always append `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bc96ff]` to interactive `<Link>` elements.
