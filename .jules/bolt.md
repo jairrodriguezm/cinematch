@@ -32,3 +32,6 @@
 ## 2024-03-24 - React 19 Image Preloading Build Gotcha
 **Learning:** When using `react-dom`'s `preload` function inside JSX for multiple items, mapping over the array must explicitly `return null;`. Using methods like `.forEach()` that return `void` will cause Next.js/TypeScript to fail the build with a `Type 'void' is not assignable to type 'ReactNode'` error.
 **Action:** Always use `.map(item => { preload(...); return null; })` when executing side-effects like preloading directly in the JSX render path.
+## 2024-11-20 - Decouple Network Latency from UI Animations
+**Learning:** When implementing sequential interaction interfaces (like swiping cards) that use transition animations (e.g., Framer Motion), awaiting network requests before triggering the animation timeout compounds user latency (Network Time + Animation Time).
+**Action:** Execute server actions asynchronously without `await` and allow the animation timeouts to trigger immediately, maintaining the optimistic UI flow and eliminating perceived network delays.
