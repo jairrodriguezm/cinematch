@@ -66,27 +66,22 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
 
   const activeMovie = movies[currentIndex];
 
-  const handleSwipe = async (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
+  const handleSwipe = (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
     if (currentIndex >= movies.length || isPending) return;
     
     setIsPending(true);
     setDirection(action === 'LIKE' ? 'right' : action === 'DISCARD' ? 'left' : 'up');
 
-    // Display temporary loading status in Spanish
-    setStatusText(`Registrando "${action}"...`);
-
-    // Execute the Server Action
-    const result = await saveMovieInteraction(
+    /* ⚡ Bolt Optimization: Optimistic UI Decoupling */
+    /* What: Fire-and-forget the server action instead of awaiting it. */
+    /* Why: Synchronously waiting for the network request blocks the next card from animating and appearing. */
+    /* Impact: Eliminates network latency from the critical path of the swipe interaction, allowing rapid sequential swiping. */
+    void saveMovieInteraction(
       activeMovie.id,
       action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
-    );
-
-    if (result.success) {
-      setStatusText(`¡Interacción registrada con éxito!`);
-    } else {
-      console.error(result.error);
-      setStatusText(`Error al guardar: ${result.error}`);
-    }
+    ).catch((err: unknown) => {
+      console.error('Error al guardar interacción optimista:', err);
+    });
 
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
