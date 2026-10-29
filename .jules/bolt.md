@@ -32,3 +32,6 @@
 ## 2024-03-24 - React 19 Image Preloading Build Gotcha
 **Learning:** When using `react-dom`'s `preload` function inside JSX for multiple items, mapping over the array must explicitly `return null;`. Using methods like `.forEach()` that return `void` will cause Next.js/TypeScript to fail the build with a `Type 'void' is not assignable to type 'ReactNode'` error.
 **Action:** Always use `.map(item => { preload(...); return null; })` when executing side-effects like preloading directly in the JSX render path.
+## 2024-11-20 - Optimistic UI State Handling
+**Learning:** When implementing optimistic UI by firing-and-forgetting asynchronous actions (e.g., removing `await` on network requests), any UI state (like `statusText`) that relies on the success/failure callback of that action must be carefully managed. Setting these in delayed async callbacks can override the state of subsequent actions, especially in rapid sequential interfaces.
+**Action:** When decoupling network requests, remove synchronously tied UI loading text or states that would block the interaction, and rely on `.catch()` to log or handle failures gracefully without disrupting the optimistic flow.
