@@ -12,3 +12,7 @@
 ## 2024-05-14 - Mobile Keyboard Interference on Code Inputs
 **Learning:** In Next.js/React applications, when rendering form inputs that expect raw application codes (like room tokens), mobile keyboards often actively interfere by attempting to auto-capitalize, auto-correct, or suggest words, making it frustrating to enter or paste exact alphanumeric strings.
 **Action:** Always append `autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false}` to such specific inputs. Additionally, robust UX requires locking the input (`disabled`) and styling it appropriately (`disabled:opacity-60 disabled:cursor-not-allowed`) during asynchronous operations to prevent duplicate submissions or confusion while the user waits.
+
+## 2026-10-30 - Contextual aria-labels on rating scales
+**Learning:** When building custom interactive rating scales, screen readers may just announce raw numbers, which lacks context. Adding semantic `aria-label` attributes (like 'N estrellas') clarifies their meaning.
+**Action:** Always assign contextual `aria-label` and `title` attributes to each option in custom rating scales, mapping to its semantic value.
