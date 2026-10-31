@@ -72,21 +72,22 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
     setIsPending(true);
     setDirection(action === 'LIKE' ? 'right' : action === 'DISCARD' ? 'left' : 'up');
 
-    // Display temporary loading status in Spanish
-    setStatusText(`Registrando "${action}"...`);
-
-    // Execute the Server Action
-    const result = await saveMovieInteraction(
+    // ⚡ Bolt Optimization: Optimistic UI Decoupling
+    // What: Decouple the saveMovieInteraction network request from the swipe interaction flow.
+    // Why: Awaiting the server action blocks rapid swiping and causes perceived latency.
+    // Impact: Enables immediate swiping feedback without network delay.
+    saveMovieInteraction(
       activeMovie.id,
       action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
-    );
-
-    if (result.success) {
-      setStatusText(`¡Interacción registrada con éxito!`);
-    } else {
-      console.error(result.error);
-      setStatusText(`Error al guardar: ${result.error}`);
-    }
+    ).then(result => {
+      if (!result.success) {
+        console.error(result.error);
+        setStatusText(`Error al guardar: ${result.error}`);
+      }
+    }).catch((err) => {
+      console.error(err);
+      setStatusText('Error al conectar con el servidor.');
+    });
 
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
