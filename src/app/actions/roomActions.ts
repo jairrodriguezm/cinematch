@@ -210,8 +210,16 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
       if (firstMemberLikes && secondMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          if (secondMemberLikes.has(movieId)) {
+        // ⚡ Bolt Optimization: Set Intersection by Size
+        // What: Iterates over the smaller of the two Sets when computing shared matches.
+        // Why: Ensures the intersection time complexity is bounded by O(min(M, N)) instead of always O(M).
+        // Impact: Reduces loop iterations and CPU blocking time when one user has significantly fewer interactions than the other.
+        const [smallerSet, largerSet] = firstMemberLikes.size <= secondMemberLikes.size
+          ? [firstMemberLikes, secondMemberLikes]
+          : [secondMemberLikes, firstMemberLikes];
+
+        for (const movieId of smallerSet) {
+          if (largerSet.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
@@ -312,8 +320,16 @@ export async function getRoomMatches(roomId: string): Promise<RoomWithMatches | 
     const firstMemberLikes = userLikes.get(room.created_by);
     const secondMemberLikes = userLikes.get(room.invited_user_id);
     if (firstMemberLikes && secondMemberLikes) {
-      for (const movieId of firstMemberLikes) {
-        if (secondMemberLikes.has(movieId)) {
+      // ⚡ Bolt Optimization: Set Intersection by Size
+      // What: Iterates over the smaller of the two Sets when computing shared matches.
+      // Why: Ensures the intersection time complexity is bounded by O(min(M, N)) instead of always O(M).
+      // Impact: Reduces loop iterations and CPU blocking time when one user has significantly fewer interactions than the other.
+      const [smallerSet, largerSet] = firstMemberLikes.size <= secondMemberLikes.size
+        ? [firstMemberLikes, secondMemberLikes]
+        : [secondMemberLikes, firstMemberLikes];
+
+      for (const movieId of smallerSet) {
+        if (largerSet.has(movieId)) {
           matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
         }
       }
