@@ -210,8 +210,16 @@ export async function fetchRoomsWithMatches(): Promise<RoomWithMatches[]> {
       const matchedMovieIds: { movieId: number; matchType: 'PRIMARY' | 'SECONDARY' }[] = [];
 
       if (firstMemberLikes && secondMemberLikes) {
-        for (const movieId of firstMemberLikes) {
-          if (secondMemberLikes.has(movieId)) {
+        // ⚡ Bolt Optimization: O(min(M, N)) Set Intersection
+        // What: Iterate over the smaller Set when calculating intersections.
+        // Why: Ensures time complexity is bounded by the smaller collection, avoiding unnecessary loops when one user has significantly more interactions.
+        // Impact: Reduces CPU cycles during real-time matching.
+        const [smallerSet, largerSet] = firstMemberLikes.size < secondMemberLikes.size
+          ? [firstMemberLikes, secondMemberLikes]
+          : [secondMemberLikes, firstMemberLikes];
+
+        for (const movieId of smallerSet) {
+          if (largerSet.has(movieId)) {
             matchedMovieIds.push({ movieId, matchType: 'PRIMARY' });
             allMatchedMovieIds.add(movieId);
           }
