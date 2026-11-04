@@ -32,6 +32,9 @@
 ## 2024-03-24 - React 19 Image Preloading Build Gotcha
 **Learning:** When using `react-dom`'s `preload` function inside JSX for multiple items, mapping over the array must explicitly `return null;`. Using methods like `.forEach()` that return `void` will cause Next.js/TypeScript to fail the build with a `Type 'void' is not assignable to type 'ReactNode'` error.
 **Action:** Always use `.map(item => { preload(...); return null; })` when executing side-effects like preloading directly in the JSX render path.
+## 2024-11-20 - Set Intersection Time Complexity
+**Learning:** When calculating intersections between two sets in realtime matching algorithms, iterating over the first set defaults to O(M) time complexity, which can be a bottleneck if user interaction sets vary wildly in size.
+**Action:** Always compare `.size` properties and iterate over the smaller set while checking `.has()` on the larger set to guarantee O(min(M, N)) time complexity.
 ## 2024-12-05 - Avoid state updates in delayed callbacks for sequential UIs
 **Learning:** When decoupling network requests for optimistic UI in sequential interfaces (e.g., card swiping), setting shared component states (such as success `statusText`) in delayed asynchronous callbacks creates a race condition that can override the UI state of the subsequently active item.
 **Action:** Extract network calls to fire-and-forget promises, move error handling to `.then()`, but omit shared UI state updates from these asynchronous callbacks to preserve UI integrity.
