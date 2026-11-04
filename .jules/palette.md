@@ -12,3 +12,8 @@
 ## 2024-05-14 - Mobile Keyboard Interference on Code Inputs
 **Learning:** In Next.js/React applications, when rendering form inputs that expect raw application codes (like room tokens), mobile keyboards often actively interfere by attempting to auto-capitalize, auto-correct, or suggest words, making it frustrating to enter or paste exact alphanumeric strings.
 **Action:** Always append `autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false}` to such specific inputs. Additionally, robust UX requires locking the input (`disabled`) and styling it appropriately (`disabled:opacity-60 disabled:cursor-not-allowed`) during asynchronous operations to prevent duplicate submissions or confusion while the user waits.
+
+
+## 2024-11-04 - Semantic Context for Range Inputs and Tooltips
+**Learning:** Native range inputs often lack semantic context for screen readers (announcing only the raw number).
+**Action:** Always provide an `aria-valuetext` attribute (e.g., `aria-valuetext={\`${value} estrellas\`}`) on the input to give meaning to the value, and apply `aria-hidden="true"` to any corresponding custom visual tooltips to prevent redundant screen reader announcements.
