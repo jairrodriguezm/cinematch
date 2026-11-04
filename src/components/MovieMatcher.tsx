@@ -66,7 +66,7 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
 
   const activeMovie = movies[currentIndex];
 
-  const handleSwipe = async (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
+  const handleSwipe = (action: 'LIKE' | 'MAYBE' | 'DISCARD') => {
     if (currentIndex >= movies.length || isPending) return;
     
     setIsPending(true);
@@ -75,18 +75,20 @@ export default function MovieMatcher({ initialMovies, isFallback }: MovieMatcher
     // Display temporary loading status in Spanish
     setStatusText(`Registrando "${action}"...`);
 
-    // Execute the Server Action
-    const result = await saveMovieInteraction(
+    /* ⚡ Bolt Optimization: Optimistic UI for Swiping */
+    /* What: Decouple the saveMovieInteraction network request from the UI animation flow by removing await. */
+    /* Why: Awaiting the server response blocks the card transition and delays the setTimeout, making swiping feel sluggish. */
+    /* Impact: Instantly triggers the 400ms exit animation, dramatically improving perceived performance and swipe responsiveness. */
+    saveMovieInteraction(
       activeMovie.id,
       action === 'LIKE' ? 10 : action === 'MAYBE' ? 6 : 1
-    );
-
-    if (result.success) {
-      setStatusText(`¡Interacción registrada con éxito!`);
-    } else {
-      console.error(result.error);
-      setStatusText(`Error al guardar: ${result.error}`);
-    }
+    )
+      .then((result) => {
+        if (!result.success) {
+          console.error(result.error);
+        }
+      })
+      .catch((err) => console.error(err));
 
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
