@@ -39,6 +39,7 @@ export default function RatingSlider({ initialValue, onCommit, disabled }: Ratin
           onTouchStart={() => setIsDragging(true)}
           onTouchEnd={() => setIsDragging(false)}
           aria-label="Puntuación de la película"
+          aria-valuetext={`${integerValue} estrellas`}
           className="w-full h-2 rounded-full appearance-none bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-[#f5c518] relative z-10 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         />
 
@@ -54,6 +55,7 @@ export default function RatingSlider({ initialValue, onCommit, disabled }: Ratin
 
         {/* Floating Tooltip */}
         <div
+          aria-hidden="true"
           className="absolute top-[-10px] -translate-x-1/2 text-black font-mono text-[11px] px-2 py-0.5 rounded-md transition-opacity duration-200 pointer-events-none z-30 font-extrabold bg-[#f5c518] shadow-[0_0_12px_rgba(245,197,24,0.8)]"
           style={{
             left: `calc(${percentage}% + ${10 - percentage * 0.2}px)`,
