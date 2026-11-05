@@ -38,3 +38,6 @@
 ## 2024-12-05 - Avoid state updates in delayed callbacks for sequential UIs
 **Learning:** When decoupling network requests for optimistic UI in sequential interfaces (e.g., card swiping), setting shared component states (such as success `statusText`) in delayed asynchronous callbacks creates a race condition that can override the UI state of the subsequently active item.
 **Action:** Extract network calls to fire-and-forget promises, move error handling to `.then()`, but omit shared UI state updates from these asynchronous callbacks to preserve UI integrity.
+## 2026-11-05 - Decouple network request for optimistic UI
+**Learning:** Awaiting network requests sequentially inside UI transition handlers (like `handleRatingSubmit`) causes noticeable lag and blocks the render of subsequent elements.
+**Action:** Use fire-and-forget promises (with attached `.then()` and `.catch()` blocks for error handling) to allow the UI to update optimistically without waiting for server confirmation.
