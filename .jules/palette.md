@@ -18,3 +18,6 @@
 ## 2024-11-04 - Semantic Context for Range Inputs and Tooltips
 **Learning:** Native range inputs often lack semantic context for screen readers (announcing only the raw number).
 **Action:** Always provide an `aria-valuetext` attribute (e.g., `aria-valuetext={\`${value} estrellas\`}`) on the input to give meaning to the value, and apply `aria-hidden="true"` to any corresponding custom visual tooltips to prevent redundant screen reader announcements.
+## 2024-05-18 - Missing focus states and context on Rating Selector
+**Learning:** Found that custom rating selector buttons (radio group) using generic Tailwind CSS lack proper keyboard focus rings and semantic meaning for screen readers, making them less accessible.
+**Action:** Always verify keyboard focus state visibility and semantic meaning on new or updated custom radio buttons. Append `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2` alongside the appropriate color ring (e.g. `focus-visible:ring-[#f5c518]`) and provide `aria-label` and `title` to give meaning to the value.
