@@ -24,9 +24,11 @@ export default function RatingSelector({ value, onChange, disabled }: RatingSele
           role="radio"
           aria-checked={value === rating}
           disabled={disabled}
+          aria-label={`${rating} estrellas`}
+          title={`${rating} estrellas`}
           onClick={() => onChange(rating)}
           className={cn(
-            'aspect-square rounded-lg text-xs font-bold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50',
+            'aspect-square rounded-lg text-xs font-bold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#f5c518]',
             value === rating ? ratingClass(rating) : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200',
           )}
         >
