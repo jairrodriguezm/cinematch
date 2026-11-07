@@ -56,7 +56,11 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
     void fetchMoreMovies(1)
   }, [fetchMoreMovies])
 
-  const handleRatingSubmit = async (scoreToSubmit: number) => {
+  /* ⚡ Bolt Optimization: Decouple Network Request from UI Update */
+  /* What: Changed `await saveMovieInteraction` to a fire-and-forget promise. */
+  /* Why: An await delays subsequent code execution (e.g. fetching more movies and releasing locks). */
+  /* Impact: Reduces perceived latency by ensuring subsequent logic runs without waiting for the network roundtrip. */
+  const handleRatingSubmit = (scoreToSubmit: number) => {
     if (!activeMovie || submittingIds.has(activeMovie.id)) return
     console.log('[MovieDeck] Submitting rating:', scoreToSubmit, 'for movie:', activeMovie.title)
 
@@ -68,24 +72,26 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
     setQueue((prev) => prev.slice(1))
     setIsExpanded(false)
 
-    try {
-      const res = await saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
-      if (!res.success) {
-        console.error('[MovieDeck] Save interaction failed:', res.error)
-        setErrorMessage(res.error || 'Error al guardar la calificación.')
-        setQueue((prev) => [targetMovie, ...prev])
-      }
-    } catch (err: unknown) {
-      console.error('[MovieDeck] Save interaction exception:', err)
-      setErrorMessage('Error al conectar con el servidor.')
-      setQueue((prev) => [targetMovie, ...prev])
-    } finally {
-      setSubmittingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(movieId)
-        return next
+    saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
+      .then((res) => {
+        if (!res.success) {
+          console.error('[MovieDeck] Save interaction failed:', res.error)
+          setErrorMessage(res.error || 'Error al guardar la calificación.')
+          setQueue((prev) => [targetMovie, ...prev])
+        }
       })
-    }
+      .catch((err: unknown) => {
+        console.error('[MovieDeck] Save interaction exception:', err)
+        setErrorMessage('Error al conectar con el servidor.')
+        setQueue((prev) => [targetMovie, ...prev])
+      })
+      .finally(() => {
+        setSubmittingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(movieId)
+          return next
+        })
+      })
 
     if (queue.length <= 3 && !loading) {
       void fetchMoreMovies(nextPage)
