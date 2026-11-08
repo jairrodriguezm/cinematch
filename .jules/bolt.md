@@ -38,3 +38,7 @@
 ## 2024-12-05 - Avoid state updates in delayed callbacks for sequential UIs
 **Learning:** When decoupling network requests for optimistic UI in sequential interfaces (e.g., card swiping), setting shared component states (such as success `statusText`) in delayed asynchronous callbacks creates a race condition that can override the UI state of the subsequently active item.
 **Action:** Extract network calls to fire-and-forget promises, move error handling to `.then()`, but omit shared UI state updates from these asynchronous callbacks to preserve UI integrity.
+
+## 2024-05-30 - Decoupling Network Requests for Optimistic UI in React
+**Learning:** In React, `await`ing a network request does not block the rendering of state updates scheduled *before* it due to state batching. The actual performance bottleneck is that `await` delays subsequent code execution, such as releasing UI locks or triggering subsequent data fetches.
+**Action:** When implementing optimistic UI, convert awaited network requests to fire-and-forget promises. Ensure application-level error handling (like restoring state on failure) is moved into `.then()` and `.catch()` blocks.

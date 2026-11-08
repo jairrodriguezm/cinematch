@@ -68,24 +68,30 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
     setQueue((prev) => prev.slice(1))
     setIsExpanded(false)
 
-    try {
-      const res = await saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
-      if (!res.success) {
-        console.error('[MovieDeck] Save interaction failed:', res.error)
-        setErrorMessage(res.error || 'Error al guardar la calificación.')
-        setQueue((prev) => [targetMovie, ...prev])
-      }
-    } catch (err: unknown) {
-      console.error('[MovieDeck] Save interaction exception:', err)
-      setErrorMessage('Error al conectar con el servidor.')
-      setQueue((prev) => [targetMovie, ...prev])
-    } finally {
-      setSubmittingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(movieId)
-        return next
+    /* ⚡ Bolt Optimization: Decoupled Network Request for Optimistic UI */
+    /* What: Converted the awaited saveMovieInteraction to a fire-and-forget Promise. */
+    /* Why: An await delays subsequent code execution (like fetching more movies and releasing locks), even though React batches prior state updates. */
+    /* Impact: Eliminates network bottleneck, allowing immediate subsequent data fetching and unblocking the execution flow. */
+    saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
+      .then((res) => {
+        if (!res.success) {
+          console.error('[MovieDeck] Save interaction failed:', res.error)
+          setErrorMessage(res.error || 'Error al guardar la calificación.')
+          setQueue((prev) => [targetMovie, ...prev])
+        }
       })
-    }
+      .catch((err: unknown) => {
+        console.error('[MovieDeck] Save interaction exception:', err)
+        setErrorMessage('Error al conectar con el servidor.')
+        setQueue((prev) => [targetMovie, ...prev])
+      })
+      .finally(() => {
+        setSubmittingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(movieId)
+          return next
+        })
+      })
 
     if (queue.length <= 3 && !loading) {
       void fetchMoreMovies(nextPage)
