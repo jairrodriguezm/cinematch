@@ -22,6 +22,8 @@ export default function RatingSelector({ value, onChange, disabled }: RatingSele
           key={rating}
           type="button"
           role="radio"
+          aria-label={`${rating} estrellas`}
+          title={`${rating} estrellas`}
           aria-checked={value === rating}
           disabled={disabled}
           onClick={() => onChange(rating)}
