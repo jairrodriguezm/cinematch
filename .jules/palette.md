@@ -18,3 +18,7 @@
 ## 2024-11-04 - Semantic Context for Range Inputs and Tooltips
 **Learning:** Native range inputs often lack semantic context for screen readers (announcing only the raw number).
 **Action:** Always provide an `aria-valuetext` attribute (e.g., `aria-valuetext={\`${value} estrellas\`}`) on the input to give meaning to the value, and apply `aria-hidden="true"` to any corresponding custom visual tooltips to prevent redundant screen reader announcements.
+
+## 2024-11-08 - Contextual labels for custom radio options
+**Learning:** When implementing custom UI components representing a set of options (such as custom radio groups or interactive rating scales), screen reader users and mouse users need more context than just the inner numerical text. Relying solely on the wrapper group's label can lead to poor accessibility.
+**Action:** Explicitly assign contextual `aria-label` and `title` attributes to each option mapping to its semantic value (e.g., `aria-label="${rating} estrellas"`), rather than relying solely on the wrapper group's label or the button's inner numerical text.
