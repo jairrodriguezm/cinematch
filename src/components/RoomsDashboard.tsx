@@ -152,8 +152,14 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 placeholder="Ej. Cine de Fin de Semana"
                 required
                 aria-required="true"
+                aria-invalid={formStatus && !formStatus.success ? 'true' : undefined}
+                aria-describedby={formStatus ? 'roomName-feedback' : undefined}
                 disabled={isCreating}
-                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#bc96ff] focus:ring-2 focus:ring-[#bc96ff]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className={`w-full bg-white border text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                  formStatus && !formStatus.success
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20'
+                    : 'border-[#E5E7EB] focus:border-[#bc96ff] focus:ring-[#bc96ff]/20'
+                }`}
               />
             </div>
 
@@ -179,6 +185,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
           <AnimatePresence>
             {formStatus && (
               <motion.p
+                id="roomName-feedback"
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -214,12 +221,18 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
                 placeholder="Pega el código aquí"
                 required
                 aria-required="true"
+                aria-invalid={joinStatus && !joinStatus.success ? 'true' : undefined}
+                aria-describedby={joinStatus ? 'roomCode-feedback' : undefined}
                 autoComplete="off"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
                 disabled={isJoining}
-                className="w-full bg-white border border-[#E5E7EB] text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#ff4365] focus:ring-2 focus:ring-[#ff4365]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className={`w-full bg-white border text-xs px-3.5 py-2 rounded-full text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                  joinStatus && !joinStatus.success
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20'
+                    : 'border-[#E5E7EB] focus:border-[#ff4365] focus:ring-[#ff4365]/20'
+                }`}
               />
             </div>
 
@@ -245,6 +258,7 @@ export default function RoomsDashboard({ initialRooms }: RoomsDashboardProps) {
           <AnimatePresence>
             {joinStatus && (
               <motion.p
+                id="roomCode-feedback"
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
