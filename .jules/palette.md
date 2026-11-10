@@ -18,3 +18,7 @@
 ## 2024-11-04 - Semantic Context for Range Inputs and Tooltips
 **Learning:** Native range inputs often lack semantic context for screen readers (announcing only the raw number).
 **Action:** Always provide an `aria-valuetext` attribute (e.g., `aria-valuetext={\`${value} estrellas\`}`) on the input to give meaning to the value, and apply `aria-hidden="true"` to any corresponding custom visual tooltips to prevent redundant screen reader announcements.
+
+## 2024-11-04 - Semantic Validation Links and Visual Error States
+**Learning:** While the app utilizes `framer-motion` to render dynamic form feedback messages with `aria-live`, it lacks visual cues on the input fields themselves (e.g., red borders) and semantic linkages. This creates a disconnect for both sighted users scanning the form and screen reader users focused on the input.
+**Action:** Whenever adding form validation feedback, dynamically append `aria-invalid="true"` and `aria-describedby="[feedback-id]"` to the input, and ensure the input's border color visually reflects the error state (e.g., switching `border-[#E5E7EB]` to `border-red-400`).
