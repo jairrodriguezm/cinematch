@@ -68,24 +68,30 @@ export default function MovieDeck({ roomId }: MovieDeckProps) {
     setQueue((prev) => prev.slice(1))
     setIsExpanded(false)
 
-    try {
-      const res = await saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
-      if (!res.success) {
-        console.error('[MovieDeck] Save interaction failed:', res.error)
-        setErrorMessage(res.error || 'Error al guardar la calificación.')
-        setQueue((prev) => [targetMovie, ...prev])
-      }
-    } catch (err: unknown) {
-      console.error('[MovieDeck] Save interaction exception:', err)
-      setErrorMessage('Error al conectar con el servidor.')
-      setQueue((prev) => [targetMovie, ...prev])
-    } finally {
-      setSubmittingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(movieId)
-        return next
+    /* ⚡ Bolt Optimization: Optimistic UI for Ratings */
+    /* What: Decoupled saveMovieInteraction network request into a fire-and-forget promise. */
+    /* Why: Awaiting the server response delays subsequent code execution (e.g., releasing locks or fetching subsequent data) due to React state batching. */
+    /* Impact: Improves swipe responsiveness by immediately freeing the UI and advancing the queue. */
+    saveMovieInteraction(targetMovie.id, Math.round(scoreToSubmit))
+      .then((res) => {
+        if (!res.success) {
+          console.error('[MovieDeck] Save interaction failed:', res.error)
+          setErrorMessage(res.error || 'Error al guardar la calificación.')
+          setQueue((prev) => [targetMovie, ...prev])
+        }
       })
-    }
+      .catch((err) => {
+        console.error('[MovieDeck] Save interaction exception:', err)
+        setErrorMessage('Error al conectar con el servidor.')
+        setQueue((prev) => [targetMovie, ...prev])
+      })
+      .finally(() => {
+        setSubmittingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(movieId)
+          return next
+        })
+      })
 
     if (queue.length <= 3 && !loading) {
       void fetchMoreMovies(nextPage)
