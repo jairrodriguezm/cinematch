@@ -18,3 +18,6 @@
 ## 2024-11-04 - Semantic Context for Range Inputs and Tooltips
 **Learning:** Native range inputs often lack semantic context for screen readers (announcing only the raw number).
 **Action:** Always provide an `aria-valuetext` attribute (e.g., `aria-valuetext={\`${value} estrellas\`}`) on the input to give meaning to the value, and apply `aria-hidden="true"` to any corresponding custom visual tooltips to prevent redundant screen reader announcements.
+## 2024-11-11 - Dynamic aria-labels for State Changes
+**Learning:** When a button's visual text changes to indicate a success state (like "Copiado!"), static `aria-label`s suppress this information from screen readers. Merely adding `aria-hidden="true"` to the inner text prevents redundant announcements but fails to communicate the state change to visually impaired users.
+**Action:** Always use dynamic `aria-label`s (e.g., `aria-label={copied ? "Código copiado" : "Copiar código"}`) to ensure state changes are announced properly when the element relies on visual text swaps.
